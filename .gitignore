@@ -1,10 +1,146 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# Go build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
 
-# Virtual environments
-.venv
+# Environment files
+configs/env.development
+configs/env.production
+configs/env.test
+configs/env.staging
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/
+
+# Hot reload files
+.air/
+
+# Docker volumes (if any)
+.docker/
+
+# Coverage reports
+coverage.txt
+coverage.html
+
+# Devbox generated files - Complete directory
+.devbox/
+!.devbox/README.md
+devbox.lock
+
+# Additional Go artifacts
+vendor/
+go.sum.backup
+
+# Additional temporary directories
+tmp/
+temp/
+
+# Environment configuration files
+configs/app.env
+!configs/app.env.example
+
+# Additional development tool cache
+.cache/
+.npm/
+.yarn/
+node_modules/
+
+# Build and deployment artifacts
+dist/
+build/
+deploy/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Editor temporary files
+.#*
+\#*#
+.*.kate-swp
+.*.sw?
+
+# Profiling and debugging
+*.prof
+*.trace
+debug
+debug.test
+
+# Local configuration overrides
+local.env
+*.local
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.cert
+
+# Migration temporary files
+migrations/*.tmp
+
+# Air build artifacts
+__debug_bin*
+
+# Testing artifacts
+testdata/tmp/
+test-results/
+coverage/
+
+# Documentation build artifacts
+docs/_build/
+docs/.vuepress/dist/
+
+# Nix related (from devbox)
+.nix-*
+result
+result-*
+
+# Local development scripts
+dev-local.*
+local-*
+
+# Performance and monitoring
+*.heapprofile
+*.memprofile
+*.cpuprofile
+
+# Secrets and credentials
+secrets/
+credentials/
+*.secret
+*-key.json

@@ -1,0 +1,441 @@
+basePath: /api/v1
+definitions:
+  internal_presentation_http_handlers.HealthResponse:
+    properties:
+      status:
+        description: |-
+          Service status
+          example: ok
+        type: string
+      timestamp:
+        description: |-
+          Current timestamp
+          example: 2023-12-01T10:00:00Z
+        type: string
+      uptime:
+        description: |-
+          Service uptime (optional)
+          example: 24h30m
+        type: string
+      version:
+        description: |-
+          API version
+          example: 1.0.0
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.GetUserResponse:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/trading-alchemist_internal_application_dto.UserResponse'
+        description: User information
+    type: object
+  trading-alchemist_internal_application_dto.SendMagicLinkRequest:
+    properties:
+      email:
+        description: |-
+          Email address to send the magic link to
+          required: true
+          example: user@example.com
+        type: string
+      purpose:
+        description: |-
+          Purpose of the magic link (login, email_verification, password_reset)
+          example: login
+        type: string
+    required:
+    - email
+    type: object
+  trading-alchemist_internal_application_dto.SendMagicLinkResponse:
+    properties:
+      message:
+        description: |-
+          Response message
+          example: If this email is registered, a magic link has been sent
+        type: string
+      sent:
+        description: |-
+          Whether the email was sent successfully
+          example: true
+        type: boolean
+    type: object
+  trading-alchemist_internal_application_dto.UpdateUserRequest:
+    properties:
+      avatar_url:
+        description: |-
+          Avatar URL
+          example: https://example.com/avatar.jpg
+        type: string
+      first_name:
+        description: |-
+          First name (1-100 characters)
+          example: John
+        maxLength: 100
+        minLength: 1
+        type: string
+      last_name:
+        description: |-
+          Last name (1-100 characters)
+          example: Doe
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.UpdateUserResponse:
+    properties:
+      user:
+        allOf:
+        - $ref: '#/definitions/trading-alchemist_internal_application_dto.UserResponse'
+        description: Updated user information
+    type: object
+  trading-alchemist_internal_application_dto.UserResponse:
+    properties:
+      avatar_url:
+        description: |-
+          Avatar URL
+          example: https://example.com/avatar.jpg
+        type: string
+      created_at:
+        description: |-
+          Account creation timestamp
+          example: 2023-12-01T10:00:00Z
+        type: string
+      display_name:
+        description: |-
+          Display name
+          example: John Doe
+        type: string
+      email:
+        description: |-
+          Email address
+          example: user@example.com
+        type: string
+      email_verified:
+        description: |-
+          Whether email is verified
+          example: true
+        type: boolean
+      first_name:
+        description: |-
+          First name
+          example: John
+        type: string
+      full_name:
+        description: |-
+          Full name (computed from first and last name)
+          example: John Doe
+        type: string
+      id:
+        description: |-
+          User ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      is_active:
+        description: |-
+          Whether user is active
+          example: true
+        type: boolean
+      last_name:
+        description: |-
+          Last name
+          example: Doe
+        type: string
+      updated_at:
+        description: |-
+          Last update timestamp
+          example: 2023-12-01T10:00:00Z
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.VerifyMagicLinkRequest:
+    properties:
+      token:
+        description: |-
+          Magic link token to verify
+          required: true
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    required:
+    - token
+    type: object
+  trading-alchemist_internal_application_dto.VerifyMagicLinkResponse:
+    properties:
+      access_token:
+        description: |-
+          JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_in:
+        description: |-
+          Token expiration in seconds
+          example: 86400
+        type: integer
+      token_type:
+        description: |-
+          Token type
+          example: Bearer
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/trading-alchemist_internal_application_dto.UserResponse'
+        description: User information
+    type: object
+  trading-alchemist_internal_presentation_responses.ErrorDetail:
+    properties:
+      code:
+        description: |-
+          Error code
+          example: VALIDATION_ERROR
+        type: string
+      details:
+        description: |-
+          Optional error details
+          example: The email field must be a valid email address
+        type: string
+      message:
+        description: |-
+          Error message
+          example: Invalid email address
+        type: string
+    type: object
+  trading-alchemist_internal_presentation_responses.ErrorResponse:
+    properties:
+      error:
+        allOf:
+        - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorDetail'
+        description: Error details
+      success:
+        description: |-
+          Success indicator (always false for errors)
+          example: false
+        type: boolean
+    type: object
+  trading-alchemist_internal_presentation_responses.SuccessResponse:
+    properties:
+      data:
+        description: Response data
+      message:
+        description: |-
+          Optional success message
+          example: Operation completed successfully
+        type: string
+      success:
+        description: |-
+          Success indicator
+          example: true
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: team@tradingalchemist.dev
+    name: Trading Alchemist Team
+  description: |-
+    A modern Go-based authentication system with magic link functionality using Clean Architecture principles.
+    This API provides secure authentication mechanisms including magic link authentication, JWT token management, and user profile management.
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Trading Alchemist API
+  version: 1.0.0
+paths:
+  /auth/magic-link:
+    post:
+      consumes:
+      - application/json
+      description: Sends a magic link to the specified email address for passwordless
+        authentication. The magic link will be valid for the configured TTL period
+        (default 15 minutes).
+      parameters:
+      - description: Email address to send magic link to
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.SendMagicLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Magic link sent successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.SendMagicLinkResponse'
+              type: object
+        "400":
+          description: Invalid email address or validation error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "429":
+          description: Too many requests - rate limit exceeded
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      summary: Send magic link
+      tags:
+      - Authentication
+  /auth/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verifies a magic link token and returns JWT access token if valid.
+        The magic link token is consumed and cannot be used again.
+      parameters:
+      - description: Magic link token to verify
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.VerifyMagicLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Magic link verified successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.VerifyMagicLinkResponse'
+              type: object
+        "400":
+          description: Invalid token format
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Invalid, expired, or already used token
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: Token not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      summary: Verify magic link
+      tags:
+      - Authentication
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the current health status of the API. This endpoint can
+        be used for monitoring and load balancer health checks.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is healthy
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/internal_presentation_http_handlers.HealthResponse'
+              type: object
+        "503":
+          description: Service is unhealthy
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      summary: Health check
+      tags:
+      - Health
+  /users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the profile information for the currently authenticated
+        user. Requires valid JWT token in Authorization header.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.GetUserResponse'
+              type: object
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get user profile
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Updates the profile information for the currently authenticated
+        user. Only provided fields will be updated (partial update).
+      parameters:
+      - description: User profile information to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.UpdateUserResponse'
+              type: object
+        "400":
+          description: Invalid request data or validation error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update user profile
+      tags:
+      - Users
+schemes:
+- http
+- https
+securityDefinitions:
+  Bearer:
+    description: 'JWT token. Usage: "Bearer {token}"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

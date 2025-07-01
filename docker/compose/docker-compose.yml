@@ -1,0 +1,60 @@
+services:
+  # Application service
+  app:
+    build:
+      context: ../../
+      dockerfile: docker/app/Dockerfile
+    container_name: trading_alchemist_app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=trading_alchemist_db
+      - DB_SSL_MODE=disable
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - APP_ENV=production
+    depends_on:
+      - postgres
+    networks:
+      - trading_alchemist_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/app/main", "--health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:17.5-alpine
+    container_name: trading_alchemist_postgres
+    environment:
+      POSTGRES_DB: trading_alchemist_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - trading_alchemist_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trading_alchemist_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+volumes:
+  postgres_data:
+
+networks:
+  trading_alchemist_network:
+    driver: bridge 

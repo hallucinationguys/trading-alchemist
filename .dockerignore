@@ -1,0 +1,55 @@
+# Build artifacts
+bin/
+tmp/
+build-errors.log
+
+# Development files
+.devbox/
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+
+# Configuration files
+.air.toml
+.env*
+
+# Vendor directory
+vendor/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+*.out
+coverage.html
+
+# Docker files (don't copy Docker infrastructure)
+docker/
+.dockerignore
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+
+# Node modules (if any frontend assets)
+node_modules/
+
+# Database files
+*.db
+*.sqlite
+
+# Hot-reload files
+tmp/ 

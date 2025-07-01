@@ -1,0 +1,123 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.2/.schema/devbox.schema.json",
+  "packages": [
+    "go@1.24.3",
+    "postgresql_17@latest",
+    "docker@latest",
+    "docker-compose@latest",
+    "git@latest",
+    "curl@latest",
+    "gcc@latest"
+  ],
+  "env": {
+    "GOPATH": "$PWD/.devbox/go",
+    "GOBIN": "$PWD/.devbox/go/bin",
+    "PATH": "$PATH:$PWD/.devbox/go/bin",
+    "CGO_ENABLED": "1",
+    "DATABASE_URL": "postgres://postgres:postgres@localhost:5433/trading_alchemist_db?sslmode=disable"
+  },
+  "shell": {
+    "init_hook": [
+      "echo '🚀 Trading Alchemist Development Environment'",
+      "echo '📦 Go version: $(go version)'",
+      "echo '🗄️  Database: PostgreSQL'",
+      "echo '📧 Email: Resend integration'",
+      "echo '🐳 Docker: Available for containerization'",
+      "echo ''",
+      "echo 'Available commands:'",
+      "echo '  devbox run install-tools  - Install development tools'",
+      "echo '  devbox run setup          - Setup development environment'",
+      "echo '  devbox run config-setup   - Setup environment configurations'",
+      "echo '  devbox run dev            - Start local development server'",
+      "echo '  devbox run docker-dev     - Start Docker development environment'",
+      "echo '  devbox run db-setup       - Setup database'",
+      "echo '  devbox run swagger        - Generate Swagger documentation'",
+      "echo '  make help                 - Show all make targets'",
+      "echo '  make docker-dev-logs      - Follow Docker development logs'",
+      "echo ''",
+      "echo 'Environment commands:'",
+      "echo '  make run-dev              - Run with development environment'",
+      "echo '  make run-prod             - Run with production environment'",
+      "echo '  make run-test             - Run with test environment'",
+      "echo ''",
+      "mkdir -p .devbox/go/bin"
+    ],
+    "scripts": {
+      "install-tools": [
+        "echo 'Installing Go development tools...'",
+        "go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest",
+        "go install github.com/air-verse/air@latest",
+        "go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest",
+        "go install github.com/swaggo/swag/cmd/swag@latest",
+        "echo 'Tools installed successfully!'"
+      ],
+      "config-setup": [
+        "echo 'Setting up environment configurations...'",
+        "make config-copy-all",
+        "echo 'Environment configurations created!'",
+        "echo 'Edit the files in configs/ directory to customize settings for each environment.'"
+      ],
+      "setup": [
+        "echo 'Setting up Trading Alchemist development environment...'",
+        "go mod download",
+        "devbox run install-tools",
+        "devbox run config-setup",
+        "make sqlc-generate",
+        "GOFLAGS='-mod=mod' swag init -g docs/swagger.go -o docs --parseInternal --parseDependency",
+        "echo 'Setup complete! Use \"devbox run dev\" to start development.'"
+      ],
+      "dev": [
+        "echo 'Starting development server with hot reload...'",
+        "GOFLAGS='-mod=mod' APP_ENV=development air -c .air.toml"
+      ],
+      "dev-prod": [
+        "echo 'Starting server with production config...'",
+        "make config-copy-prod",
+        "GOFLAGS='-mod=mod' APP_ENV=production air -c .air.toml"
+      ],
+      "dev-test": [
+        "echo 'Starting server with test config...'",
+        "make config-copy-test",
+        "GOFLAGS='-mod=mod' APP_ENV=test air -c .air.toml"
+      ],
+      "dev-staging": [
+        "echo 'Starting server with staging config...'",
+        "make config-copy-staging",
+        "GOFLAGS='-mod=mod' APP_ENV=staging air -c .air.toml"
+      ],
+      "docker-dev": [
+        "echo 'Starting Docker development environment...'",
+        "make docker-dev"
+      ],
+      "db-setup": [
+        "echo 'Setting up database...'",
+        "make docker-up",
+        "sleep 5",
+        "make migrate-up",
+        "make sqlc-generate",
+        "GOFLAGS='-mod=mod' swag init -g docs/swagger.go -o docs --parseInternal --parseDependency",
+        "echo 'Database setup complete!'"
+      ],
+      "test": [
+        "echo 'Running tests...'",
+        "make config-copy-test",
+        "GOFLAGS='-mod=mod' APP_ENV=test go test -v ./..."
+      ],
+      "build": [
+        "echo 'Building application...'",
+        "make build"
+      ],
+      "clean": [
+        "echo 'Cleaning build artifacts...'",
+        "make clean",
+        "make clean-air",
+        "make docker-clean"
+      ],
+      "swagger": [
+        "echo 'Generating Swagger documentation...'",
+        "GOFLAGS='-mod=mod' swag init -g docs/swagger.go -o docs --parseInternal --parseDependency",
+        "echo 'Swagger documentation generated at docs/swagger.json'"
+      ]
+    }
+  }
+}

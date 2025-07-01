@@ -1,0 +1,98 @@
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: docker/app/Dockerfile
+    container_name: trading_alchemist_app_prod
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD_FILE=/run/secrets/db_password
+      - DB_NAME=trading_alchemist_db
+      - DB_SSL_MODE=require
+      - DB_MAX_CONNS=50
+      - DB_MIN_CONNS=10
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - APP_ENV=production
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - RESEND_API_KEY_FILE=/run/secrets/resend_api_key
+      - FROM_EMAIL=noreply@yourdomain.com
+      - FROM_NAME=Trading Alchemist
+    secrets:
+      - db_password
+      - jwt_secret
+      - resend_api_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - trading_alchemist_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+
+  postgres:
+    image: postgres:17.5-alpine
+    container_name: trading_alchemist_postgres_prod
+    environment:
+      POSTGRES_DB: trading_alchemist_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ../../docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - trading_alchemist_network
+    secrets:
+      - db_password
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trading_alchemist_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+secrets:
+  db_password:
+    external: true
+  jwt_secret:
+    external: true
+  resend_api_key:
+    external: true
+
+volumes:
+  postgres_data_prod:
+    external: true
+
+networks:
+  trading_alchemist_network:
+    driver: bridge 
