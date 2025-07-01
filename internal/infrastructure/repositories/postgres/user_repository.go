@@ -1,4 +1,4 @@
-package repositories
+package postgres
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"trading-alchemist/internal/domain/entities"
 	"trading-alchemist/internal/domain/repositories"
-	"trading-alchemist/internal/infrastructure/repositories/sqlc"
+	"trading-alchemist/internal/infrastructure/repositories/postgres/sqlc"
 	"trading-alchemist/pkg/errors"
 
 	"github.com/google/uuid"
@@ -14,20 +14,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// PostgresUserRepository implements UserRepository interface using PostgreSQL
-type PostgresUserRepository struct {
+// UserRepository implements the domain's UserRepository interface using PostgreSQL.
+type UserRepository struct {
 	queries *sqlc.Queries
 }
 
-// NewPostgresUserRepository creates a new postgres user repository
-func NewPostgresUserRepository(db sqlc.DBTX) repositories.UserRepository {
-	return &PostgresUserRepository{
+// NewUserRepository creates a new postgres user repository.
+func NewUserRepository(db sqlc.DBTX) repositories.UserRepository {
+	return &UserRepository{
 		queries: sqlc.New(db),
 	}
 }
 
-// Create creates a new user
-func (r *PostgresUserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
+// Create creates a new user.
+func (r *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
 	params := sqlc.CreateUserParams{
 		Email:         user.Email,
 		EmailVerified: pgtype.Bool{Bool: user.EmailVerified, Valid: true},
@@ -48,8 +48,8 @@ func (r *PostgresUserRepository) Create(ctx context.Context, user *entities.User
 	return r.sqlcUserToEntity(&sqlcUser), nil
 }
 
-// GetByID retrieves a user by their ID
-func (r *PostgresUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
+// GetByID retrieves a user by their ID.
+func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
 	userUUID := pgtype.UUID{Bytes: id, Valid: true}
 	
 	sqlcUser, err := r.queries.GetUserByID(ctx, userUUID)
@@ -63,8 +63,8 @@ func (r *PostgresUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*en
 	return r.sqlcUserToEntity(&sqlcUser), nil
 }
 
-// GetByEmail retrieves a user by their email
-func (r *PostgresUserRepository) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
+// GetByEmail retrieves a user by their email.
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*entities.User, error) {
 	sqlcUser, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -76,8 +76,8 @@ func (r *PostgresUserRepository) GetByEmail(ctx context.Context, email string) (
 	return r.sqlcUserToEntity(&sqlcUser), nil
 }
 
-// Update updates user information
-func (r *PostgresUserRepository) Update(ctx context.Context, user *entities.User) (*entities.User, error) {
+// Update updates user information.
+func (r *UserRepository) Update(ctx context.Context, user *entities.User) (*entities.User, error) {
 	userUUID := pgtype.UUID{Bytes: user.ID, Valid: true}
 	
 	params := sqlc.UpdateUserParams{
@@ -102,8 +102,8 @@ func (r *PostgresUserRepository) Update(ctx context.Context, user *entities.User
 	return r.sqlcUserToEntity(&sqlcUser), nil
 }
 
-// VerifyEmail marks a user's email as verified
-func (r *PostgresUserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
+// VerifyEmail marks a user's email as verified.
+func (r *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
 	userUUID := pgtype.UUID{Bytes: userID, Valid: true}
 	
 	sqlcUser, err := r.queries.VerifyUserEmail(ctx, userUUID)
@@ -117,8 +117,8 @@ func (r *PostgresUserRepository) VerifyEmail(ctx context.Context, userID uuid.UU
 	return r.sqlcUserToEntity(&sqlcUser), nil
 }
 
-// Deactivate deactivates a user account
-func (r *PostgresUserRepository) Deactivate(ctx context.Context, userID uuid.UUID) error {
+// Deactivate deactivates a user account.
+func (r *UserRepository) Deactivate(ctx context.Context, userID uuid.UUID) error {
 	userUUID := pgtype.UUID{Bytes: userID, Valid: true}
 	
 	err := r.queries.DeactivateUser(ctx, userUUID)
@@ -129,8 +129,8 @@ func (r *PostgresUserRepository) Deactivate(ctx context.Context, userID uuid.UUI
 	return nil
 }
 
-// sqlcUserToEntity converts SQLC User to domain entity
-func (r *PostgresUserRepository) sqlcUserToEntity(sqlcUser *sqlc.User) *entities.User {
+// sqlcUserToEntity converts a SQLC User to a domain User entity.
+func (r *UserRepository) sqlcUserToEntity(sqlcUser *sqlc.User) *entities.User {
 	user := &entities.User{
 		Email:     sqlcUser.Email,
 		IsActive:  sqlcUser.IsActive.Bool,

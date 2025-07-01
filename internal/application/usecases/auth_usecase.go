@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"net"
+	"log"
 	"time"
 
 	"trading-alchemist/internal/application/dto"
@@ -11,6 +11,7 @@ import (
 	"trading-alchemist/internal/domain/entities"
 	"trading-alchemist/internal/domain/repositories"
 	"trading-alchemist/internal/domain/services"
+	"trading-alchemist/internal/infrastructure/database"
 	"trading-alchemist/pkg/errors"
 	"trading-alchemist/pkg/utils"
 
@@ -22,6 +23,7 @@ type AuthUseCase struct {
 	magicLinkRepo repositories.MagicLinkRepository
 	emailService  services.EmailService
 	config        *config.Config
+	dbService     *database.Service
 }
 
 // NewAuthUseCase creates a new authentication use case
@@ -30,121 +32,113 @@ func NewAuthUseCase(
 	magicLinkRepo repositories.MagicLinkRepository,
 	emailService services.EmailService,
 	config *config.Config,
+	dbService *database.Service,
 ) *AuthUseCase {
 	return &AuthUseCase{
 		userRepo:      userRepo,
 		magicLinkRepo: magicLinkRepo,
 		emailService:  emailService,
 		config:        config,
+		dbService:     dbService,
 	}
 }
 
 // SendMagicLink sends a magic link to the user's email
 func (uc *AuthUseCase) SendMagicLink(ctx context.Context, req *dto.SendMagicLinkRequest) (*dto.SendMagicLinkResponse, error) {
-	// Validate email
 	if !utils.IsValidEmail(req.Email) {
 		return nil, errors.NewAppError(errors.CodeValidation, "Invalid email address", errors.ErrInvalidEmail)
 	}
 
-	// Normalize email
 	email := utils.NormalizeEmail(req.Email)
-
-	// Set default purpose if not provided
 	purpose := entities.MagicLinkPurposeLogin
 	if req.Purpose != "" {
 		purpose = entities.MagicLinkPurpose(req.Purpose)
 	}
 
-	// Get or create user
-	user, err := uc.userRepo.GetByEmail(ctx, email)
-	if err != nil {
-		// Create new user if not found
-		if err == errors.ErrUserNotFound {
-			newUser := &entities.User{
-				ID:            uuid.New(),
-				Email:         email,
-				EmailVerified: false,
-				IsActive:      true,
-				CreatedAt:     time.Now(),
-				UpdatedAt:     time.Now(),
-			}
+	var user *entities.User
+	var createdLink *entities.MagicLink
 
-			user, err = uc.userRepo.Create(ctx, newUser)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create user: %w", err)
-			}
+	err := uc.dbService.ExecuteInTx(ctx, func(provider database.RepositoryProvider) error {
+		var err error
+		userRepo := provider.User()
+		magicLinkRepo := provider.MagicLink()
 
-			// Send welcome email for new users
-			go func() {
-				if err := uc.emailService.SendWelcomeEmail(context.Background(), user); err != nil {
-					// Log error but don't fail the main flow
-					fmt.Printf("Failed to send welcome email: %v\n", err)
+		user, err = userRepo.GetByEmail(ctx, email)
+		if err != nil {
+			if err == errors.ErrUserNotFound {
+				newUser := &entities.User{
+					ID:            uuid.New(),
+					Email:         email,
+					EmailVerified: false,
+					IsActive:      true,
 				}
-			}()
-		} else {
-			return nil, fmt.Errorf("failed to get user: %w", err)
+				user, err = userRepo.Create(ctx, newUser)
+				if err != nil {
+					return fmt.Errorf("failed to create user: %w", err)
+				}
+				go func(userToSend *entities.User) {
+					if err := uc.emailService.SendWelcomeEmail(context.Background(), userToSend); err != nil {
+						log.Printf("Failed to send welcome email: %v\n", err)
+					}
+				}(user)
+			} else {
+				return fmt.Errorf("failed to get user: %w", err)
+			}
 		}
-	}
 
-	// Invalidate existing magic links for this purpose
-	if err := uc.magicLinkRepo.InvalidateUserLinks(ctx, user.ID, purpose); err != nil {
-		return nil, fmt.Errorf("failed to invalidate existing links: %w", err)
-	}
+		if err := magicLinkRepo.InvalidateUserLinks(ctx, user.ID, purpose); err != nil {
+			return fmt.Errorf("failed to invalidate existing links: %w", err)
+		}
 
-	// Generate new magic link token using utility function
-	token, err := utils.GenerateSecureToken(32) // 32 bytes = 64 hex chars
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate token: %w", err)
-	}
+		token, err := utils.GenerateSecureToken(32)
+		if err != nil {
+			return fmt.Errorf("failed to generate token: %w", err)
+		}
 
-	// Hash token for secure storage
-	tokenHash := utils.HashToken(token)
-	
-	// Parse magic link TTL
-	magicLinkTTL, err := time.ParseDuration(uc.config.App.MagicLinkTTL)
-	if err != nil {
-		return nil, fmt.Errorf("invalid MAGIC_LINK_TTL configuration: %w", err)
-	}
-	expiresAt := time.Now().Add(magicLinkTTL)
+		magicLinkTTL, err := time.ParseDuration(uc.config.App.MagicLinkTTL)
+		if err != nil {
+			return fmt.Errorf("invalid MAGIC_LINK_TTL configuration: %w", err)
+		}
 
-	magicLink := &entities.MagicLink{
-		ID:        uuid.New(),
-		UserID:    user.ID,
-		Token:     token,
-		TokenHash: tokenHash,
-		ExpiresAt: expiresAt,
-		Purpose:   purpose,
-		CreatedAt: time.Now(),
-	}
-
-	// Set IP address and user agent if provided
-	if req.IPAddress != "" {
-		if ip := net.ParseIP(req.IPAddress); ip != nil {
+		magicLink := &entities.MagicLink{
+			ID:        uuid.New(),
+			UserID:    user.ID,
+			Token:     token,
+			TokenHash: utils.HashToken(token),
+			ExpiresAt: time.Now().Add(magicLinkTTL),
+			Purpose:   purpose,
+		}
+		if req.IPAddress != "" {
 			magicLink.IPAddress = &req.IPAddress
 		}
-	}
-	if req.UserAgent != "" {
-		magicLink.UserAgent = &req.UserAgent
-	}
+		if req.UserAgent != "" {
+			magicLink.UserAgent = &req.UserAgent
+		}
 
-	// Save magic link
-	createdLink, err := uc.magicLinkRepo.Create(ctx, magicLink)
+		createdLink, err = magicLinkRepo.Create(ctx, magicLink)
+		if err != nil {
+			return fmt.Errorf("failed to create magic link: %w", err)
+		}
+		return nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to create magic link: %w", err)
+		return nil, err // The error from ExecuteInTx is already descriptive
 	}
 
-	// Send email
-	var emailErr error
-	switch purpose {
-	case entities.MagicLinkPurposeEmailVerification:
-		emailErr = uc.emailService.SendEmailVerificationEmail(ctx, user, createdLink)
-	default:
-		emailErr = uc.emailService.SendMagicLinkEmail(ctx, user, createdLink)
-	}
-
-	if emailErr != nil {
-		return nil, fmt.Errorf("failed to send email: %w", emailErr)
-	}
+	// Send email asynchronously after transaction is committed
+	go func(userToSend *entities.User, linkToSend *entities.MagicLink) {
+		var emailErr error
+		switch purpose {
+		case entities.MagicLinkPurposeEmailVerification:
+			emailErr = uc.emailService.SendEmailVerificationEmail(context.Background(), userToSend, linkToSend)
+		default:
+			emailErr = uc.emailService.SendMagicLinkEmail(context.Background(), userToSend, linkToSend)
+		}
+		if emailErr != nil {
+			log.Printf("Failed to send magic link email asynchronously: %v\n", emailErr)
+		}
+	}(user, createdLink)
 
 	return &dto.SendMagicLinkResponse{
 		Message: "Magic link sent successfully",
@@ -154,7 +148,6 @@ func (uc *AuthUseCase) SendMagicLink(ctx context.Context, req *dto.SendMagicLink
 
 // VerifyMagicLink verifies a magic link and returns authentication tokens
 func (uc *AuthUseCase) VerifyMagicLink(ctx context.Context, req *dto.VerifyMagicLinkRequest) (*dto.VerifyMagicLinkResponse, error) {
-	// Get magic link and user
 	magicLink, user, err := uc.magicLinkRepo.GetByToken(ctx, req.Token)
 	if err != nil {
 		if err == errors.ErrMagicLinkNotFound {
@@ -163,12 +156,10 @@ func (uc *AuthUseCase) VerifyMagicLink(ctx context.Context, req *dto.VerifyMagic
 		return nil, fmt.Errorf("failed to get magic link: %w", err)
 	}
 
-	// Verify token hash using utility function
 	if !utils.VerifyTokenHash(req.Token, magicLink.TokenHash) {
 		return nil, errors.NewAppError(errors.CodeUnauthorized, "Invalid magic link", errors.ErrInvalidToken)
 	}
 
-	// Check if link is valid
 	if !magicLink.IsValid() {
 		if magicLink.IsExpired() {
 			return nil, errors.NewAppError(errors.CodeUnauthorized, "Magic link has expired", errors.ErrMagicLinkExpired)
@@ -178,26 +169,28 @@ func (uc *AuthUseCase) VerifyMagicLink(ctx context.Context, req *dto.VerifyMagic
 		}
 	}
 
-	// Mark magic link as used
-	if _, err := uc.magicLinkRepo.MarkAsUsed(ctx, magicLink.ID); err != nil {
-		return nil, fmt.Errorf("failed to mark magic link as used: %w", err)
-	}
-
-	// Handle email verification
-	if magicLink.Purpose == entities.MagicLinkPurposeEmailVerification && !user.EmailVerified {
-		if _, err := uc.userRepo.VerifyEmail(ctx, user.ID); err != nil {
-			return nil, fmt.Errorf("failed to verify user email: %w", err)
+	err = uc.dbService.ExecuteInTx(ctx, func(provider database.RepositoryProvider) error {
+		if _, err := provider.MagicLink().MarkAsUsed(ctx, magicLink.ID); err != nil {
+			return fmt.Errorf("failed to mark magic link as used: %w", err)
 		}
-		user.EmailVerified = true
+		if magicLink.Purpose == entities.MagicLinkPurposeEmailVerification && !user.EmailVerified {
+			if _, err := provider.User().VerifyEmail(ctx, user.ID); err != nil {
+				return fmt.Errorf("failed to verify user email: %w", err)
+			}
+			user.EmailVerified = true
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	// Parse JWT TTL
 	jwtTTL, err := time.ParseDuration(uc.config.JWT.TTL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid JWT_TTL configuration: %w", err)
 	}
 
-	// Generate JWT token using utility function
 	token, err := utils.GenerateJWT(user, uc.config.JWT.Secret, jwtTTL, uc.config.App.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate JWT: %w", err)

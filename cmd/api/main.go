@@ -13,7 +13,7 @@ import (
 	"trading-alchemist/internal/config"
 	"trading-alchemist/internal/infrastructure/database"
 	"trading-alchemist/internal/infrastructure/email"
-	"trading-alchemist/internal/infrastructure/repositories"
+	postgres "trading-alchemist/internal/infrastructure/repositories/postgres"
 	server "trading-alchemist/internal/presentation/http"
 )
 
@@ -32,17 +32,18 @@ func main() {
 	defer database.Close(db)
 
 	// Initialize repositories
-	userRepo := repositories.NewPostgresUserRepository(db)
-	magicLinkRepo := repositories.NewPostgresMagicLinkRepository(db)
+	userRepo := postgres.NewUserRepository(db)
+	magicLinkRepo := postgres.NewMagicLinkRepository(db)
 
 	// Initialize services
+	dbService := database.NewService(db)
 	emailService, err := email.NewEmailService(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize email service: %v", err)
 	}
 
 	// Initialize use cases
-	authUseCase := usecases.NewAuthUseCase(userRepo, magicLinkRepo, emailService, cfg)
+	authUseCase := usecases.NewAuthUseCase(userRepo, magicLinkRepo, emailService, cfg, dbService)
 
 	// Initialize HTTP server
 	srv := server.NewServer(cfg, authUseCase, userRepo)

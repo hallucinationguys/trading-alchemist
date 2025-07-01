@@ -1,4 +1,4 @@
-package repositories
+package postgres
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 	"trading-alchemist/internal/domain/entities"
 	"trading-alchemist/internal/domain/repositories"
-	"trading-alchemist/internal/infrastructure/repositories/sqlc"
+	"trading-alchemist/internal/infrastructure/repositories/postgres/sqlc"
 	"trading-alchemist/pkg/errors"
 
 	"github.com/google/uuid"
@@ -16,20 +16,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// PostgresMagicLinkRepository implements MagicLinkRepository interface using PostgreSQL
-type PostgresMagicLinkRepository struct {
+// MagicLinkRepository implements the domain's MagicLinkRepository interface using PostgreSQL.
+type MagicLinkRepository struct {
 	queries *sqlc.Queries
 }
 
-// NewPostgresMagicLinkRepository creates a new postgres magic link repository
-func NewPostgresMagicLinkRepository(db sqlc.DBTX) repositories.MagicLinkRepository {
-	return &PostgresMagicLinkRepository{
+// NewMagicLinkRepository creates a new postgres magic link repository.
+func NewMagicLinkRepository(db sqlc.DBTX) repositories.MagicLinkRepository {
+	return &MagicLinkRepository{
 		queries: sqlc.New(db),
 	}
 }
 
-// Create creates a new magic link
-func (r *PostgresMagicLinkRepository) Create(ctx context.Context, magicLink *entities.MagicLink) (*entities.MagicLink, error) {
+// Create creates a new magic link.
+func (r *MagicLinkRepository) Create(ctx context.Context, magicLink *entities.MagicLink) (*entities.MagicLink, error) {
 	params := sqlc.CreateMagicLinkParams{
 		UserID:    pgtype.UUID{Bytes: magicLink.UserID, Valid: true},
 		Token:     magicLink.Token,
@@ -60,8 +60,8 @@ func (r *PostgresMagicLinkRepository) Create(ctx context.Context, magicLink *ent
 	return r.sqlcMagicLinkToEntity(&sqlcMagicLink), nil
 }
 
-// GetByToken retrieves a magic link by its token (with user info)
-func (r *PostgresMagicLinkRepository) GetByToken(ctx context.Context, token string) (*entities.MagicLink, *entities.User, error) {
+// GetByToken retrieves a magic link by its token (with user info).
+func (r *MagicLinkRepository) GetByToken(ctx context.Context, token string) (*entities.MagicLink, *entities.User, error) {
 	row, err := r.queries.GetMagicLinkByToken(ctx, token)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -108,8 +108,8 @@ func (r *PostgresMagicLinkRepository) GetByToken(ctx context.Context, token stri
 	return magicLink, user, nil
 }
 
-// MarkAsUsed marks a magic link as used
-func (r *PostgresMagicLinkRepository) MarkAsUsed(ctx context.Context, linkID uuid.UUID) (*entities.MagicLink, error) {
+// MarkAsUsed marks a magic link as used.
+func (r *MagicLinkRepository) MarkAsUsed(ctx context.Context, linkID uuid.UUID) (*entities.MagicLink, error) {
 	linkUUID := pgtype.UUID{Bytes: linkID, Valid: true}
 	
 	sqlcMagicLink, err := r.queries.UseMagicLink(ctx, linkUUID)
@@ -123,8 +123,8 @@ func (r *PostgresMagicLinkRepository) MarkAsUsed(ctx context.Context, linkID uui
 	return r.sqlcMagicLinkToEntity(&sqlcMagicLink), nil
 }
 
-// InvalidateUserLinks invalidates all unused magic links for a user with specific purpose
-func (r *PostgresMagicLinkRepository) InvalidateUserLinks(ctx context.Context, userID uuid.UUID, purpose entities.MagicLinkPurpose) error {
+// InvalidateUserLinks invalidates all unused magic links for a user with a specific purpose.
+func (r *MagicLinkRepository) InvalidateUserLinks(ctx context.Context, userID uuid.UUID, purpose entities.MagicLinkPurpose) error {
 	params := sqlc.InvalidateUserMagicLinksParams{
 		UserID:  pgtype.UUID{Bytes: userID, Valid: true},
 		Purpose: string(purpose),
@@ -138,8 +138,8 @@ func (r *PostgresMagicLinkRepository) InvalidateUserLinks(ctx context.Context, u
 	return nil
 }
 
-// CleanupExpired removes expired magic links
-func (r *PostgresMagicLinkRepository) CleanupExpired(ctx context.Context) error {
+// CleanupExpired removes expired magic links.
+func (r *MagicLinkRepository) CleanupExpired(ctx context.Context) error {
 	err := r.queries.CleanupExpiredMagicLinks(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to cleanup expired magic links: %w", err)
@@ -148,8 +148,8 @@ func (r *PostgresMagicLinkRepository) CleanupExpired(ctx context.Context) error 
 	return nil
 }
 
-// sqlcMagicLinkToEntity converts SQLC MagicLink to domain entity
-func (r *PostgresMagicLinkRepository) sqlcMagicLinkToEntity(sqlcMagicLink *sqlc.MagicLink) *entities.MagicLink {
+// sqlcMagicLinkToEntity converts a SQLC MagicLink to a domain MagicLink entity.
+func (r *MagicLinkRepository) sqlcMagicLinkToEntity(sqlcMagicLink *sqlc.MagicLink) *entities.MagicLink {
 	magicLink := &entities.MagicLink{
 		Token:     sqlcMagicLink.Token,
 		TokenHash: sqlcMagicLink.TokenHash,
