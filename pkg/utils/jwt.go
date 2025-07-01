@@ -4,40 +4,40 @@ import (
 	"fmt"
 	"time"
 
+	"trading-alchemist/internal/domain/entities"
+
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
-type JWTClaims struct {
-	UserID uuid.UUID `json:"user_id"`
+type Claims struct {
+	Email string `json:"email"`
 	jwt.RegisteredClaims
 }
 
-// GenerateJWT creates a new JWT token for the given user ID
-func GenerateJWT(userID uuid.UUID, secret string, expiresIn time.Duration, issuer string) (string, error) {
-	claims := JWTClaims{
-		UserID: userID,
+// GenerateJWT creates a new JWT token
+func GenerateJWT(user *entities.User, secret string, ttl time.Duration, issuer string) (string, error) {
+	if user == nil {
+		return "", fmt.Errorf("user cannot be nil")
+	}
+
+	claims := &Claims{
+		Email: user.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    issuer,
-			Subject:   userID.String(),
+			Subject:   user.ID.String(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", fmt.Errorf("failed to sign JWT token: %w", err)
-	}
-
-	return tokenString, nil
+	return token.SignedString([]byte(secret))
 }
 
 // ValidateJWT validates a JWT token and returns the user ID
-func ValidateJWT(tokenString, secret string) (uuid.UUID, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+func ValidateJWT(tokenString string, secret string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -45,12 +45,12 @@ func ValidateJWT(tokenString, secret string) (uuid.UUID, error) {
 	})
 
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("failed to parse JWT token: %w", err)
+		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
-		return claims.UserID, nil
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
 	}
 
-	return uuid.Nil, fmt.Errorf("invalid JWT token")
+	return nil, fmt.Errorf("invalid token")
 } 

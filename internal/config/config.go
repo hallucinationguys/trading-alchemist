@@ -63,6 +63,7 @@ type AppConfig struct {
 	Name         string
 	Environment  string
 	BaseURL      string
+	FrontendBaseURL string
 	MagicLinkTTL string
 }
 
@@ -109,6 +110,7 @@ func Load() *Config {
 			Name:         v.GetString("APP_NAME"),
 			Environment:  v.GetString("APP_ENV"),
 			BaseURL:      v.GetString("APP_BASE_URL"),
+			FrontendBaseURL: v.GetString("FRONTEND_BASE_URL"),
 			MagicLinkTTL: v.GetString("MAGIC_LINK_TTL"),
 		},
 	}
@@ -175,6 +177,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("APP_NAME", "Trading Alchemist")
 	v.SetDefault("APP_ENV", "development")
 	v.SetDefault("APP_BASE_URL", "http://localhost:8080")
+	v.SetDefault("FRONTEND_BASE_URL", "http://localhost:3000")
 	v.SetDefault("MAGIC_LINK_TTL", "15m")
 }
 

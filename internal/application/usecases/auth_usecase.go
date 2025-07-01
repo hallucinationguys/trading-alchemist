@@ -21,7 +21,6 @@ type AuthUseCase struct {
 	userRepo      repositories.UserRepository
 	magicLinkRepo repositories.MagicLinkRepository
 	emailService  services.EmailService
-	tokenService  services.TokenService
 	config        *config.Config
 }
 
@@ -30,14 +29,12 @@ func NewAuthUseCase(
 	userRepo repositories.UserRepository,
 	magicLinkRepo repositories.MagicLinkRepository,
 	emailService services.EmailService,
-	tokenService services.TokenService,
 	config *config.Config,
 ) *AuthUseCase {
 	return &AuthUseCase{
 		userRepo:      userRepo,
 		magicLinkRepo: magicLinkRepo,
 		emailService:  emailService,
-		tokenService:  tokenService,
 		config:        config,
 	}
 }
@@ -94,13 +91,14 @@ func (uc *AuthUseCase) SendMagicLink(ctx context.Context, req *dto.SendMagicLink
 		return nil, fmt.Errorf("failed to invalidate existing links: %w", err)
 	}
 
-	// Generate new magic link
-	token, err := uc.tokenService.GenerateToken()
+	// Generate new magic link token using utility function
+	token, err := utils.GenerateSecureToken(32) // 32 bytes = 64 hex chars
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	tokenHash := uc.tokenService.HashToken(token)
+	// Hash token for secure storage
+	tokenHash := utils.HashToken(token)
 	
 	// Parse magic link TTL
 	magicLinkTTL, err := time.ParseDuration(uc.config.App.MagicLinkTTL)
@@ -165,8 +163,8 @@ func (uc *AuthUseCase) VerifyMagicLink(ctx context.Context, req *dto.VerifyMagic
 		return nil, fmt.Errorf("failed to get magic link: %w", err)
 	}
 
-	// Verify token hash
-	if !uc.tokenService.VerifyToken(req.Token, magicLink.TokenHash) {
+	// Verify token hash using utility function
+	if !utils.VerifyTokenHash(req.Token, magicLink.TokenHash) {
 		return nil, errors.NewAppError(errors.CodeUnauthorized, "Invalid magic link", errors.ErrInvalidToken)
 	}
 
@@ -199,8 +197,8 @@ func (uc *AuthUseCase) VerifyMagicLink(ctx context.Context, req *dto.VerifyMagic
 		return nil, fmt.Errorf("invalid JWT_TTL configuration: %w", err)
 	}
 
-	// Generate JWT token
-	token, err := uc.tokenService.GenerateJWT(user.ID, jwtTTL)
+	// Generate JWT token using utility function
+	token, err := utils.GenerateJWT(user, uc.config.JWT.Secret, jwtTTL, uc.config.App.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate JWT: %w", err)
 	}
@@ -213,11 +211,17 @@ func (uc *AuthUseCase) VerifyMagicLink(ctx context.Context, req *dto.VerifyMagic
 	}, nil
 }
 
-// ValidateToken validates a JWT token and returns the user
-func (uc *AuthUseCase) ValidateToken(ctx context.Context, token string) (*entities.User, error) {
-	userID, err := uc.tokenService.ValidateJWT(token)
+// ValidateToken validates a JWT token and returns the user claims
+func (uc *AuthUseCase) ValidateToken(ctx context.Context, token string) (*utils.Claims, error) {
+	// Validate JWT using utility function
+	claims, err := utils.ValidateJWT(token, uc.config.JWT.Secret)
 	if err != nil {
 		return nil, errors.NewAppError(errors.CodeUnauthorized, "Invalid token", err)
+	}
+
+	userID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return nil, errors.NewAppError(errors.CodeUnauthorized, "Invalid user ID in token", err)
 	}
 
 	user, err := uc.userRepo.GetByID(ctx, userID)
@@ -232,5 +236,7 @@ func (uc *AuthUseCase) ValidateToken(ctx context.Context, token string) (*entiti
 		return nil, errors.NewAppError(errors.CodeForbidden, "Account is inactive", errors.ErrForbidden)
 	}
 
-	return user, nil
+	// The email in claims might be stale, so we prefer the one from the database.
+	claims.Email = user.Email
+	return claims, nil
 } 

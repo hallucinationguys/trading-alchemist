@@ -5,18 +5,23 @@ import (
 	"github.com/google/uuid"
 
 	"trading-alchemist/internal/application/dto"
+	"trading-alchemist/internal/application/usecases"
 	"trading-alchemist/internal/presentation/responses"
+	"trading-alchemist/pkg/utils"
 )
 
 // UserHandler handles user-related requests
 type UserHandler struct {
-	// In a real implementation, this would have dependencies like:
-	// userUseCase application.UserUseCase
+	userUseCase *usecases.UserUseCase
+	authUseCase *usecases.AuthUseCase
 }
 
 // NewUserHandler creates a new user handler
-func NewUserHandler() *UserHandler {
-	return &UserHandler{}
+func NewUserHandler(userUseCase *usecases.UserUseCase, authUseCase *usecases.AuthUseCase) *UserHandler {
+	return &UserHandler{
+		userUseCase: userUseCase,
+		authUseCase: authUseCase,
+	}
 }
 
 // GetProfile retrieves the current user's profile
@@ -32,23 +37,25 @@ func NewUserHandler() *UserHandler {
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /users/profile [get]
 func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
-	// TODO: Extract user ID from JWT token
-	// TODO: Implement actual user retrieval logic
-	
-	// Mock user data - replace with actual user from database
-	user := dto.UserResponse{
-		ID:            uuid.New(),
-		Email:         "user@example.com",
-		EmailVerified: true,
-		FirstName:     stringPtr("John"),
-		LastName:      stringPtr("Doe"),
-		FullName:      "John Doe",
-		DisplayName:   "John Doe",
-		IsActive:      true,
+	// Extract user from context (set by auth middleware)
+	userClaims, ok := c.Locals("user").(*utils.Claims)
+	if !ok || userClaims == nil {
+		return responses.SendError(c, fiber.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+	}
+
+	userID, err := uuid.Parse(userClaims.Subject)
+	if err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid user ID format")
+	}
+
+	// Call use case to get profile
+	userProfile, err := h.userUseCase.GetUserProfile(c.Context(), userID)
+	if err != nil {
+		return responses.HandleError(c, err)
 	}
 
 	response := dto.GetUserResponse{
-		User: user,
+		User: *userProfile,
 	}
 
 	return responses.SendSuccess(c, response, "Profile retrieved successfully")
@@ -70,25 +77,31 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Router /users/profile [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 	var req dto.UpdateUserRequest
-	
+
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
 
-	// TODO: Extract user ID from JWT token
-	// TODO: Add validation
-	// TODO: Implement actual user update logic
-	
+	// Extract user from context
+	userClaims, ok := c.Locals("user").(*utils.Claims)
+	if !ok || userClaims == nil {
+		return responses.SendError(c, fiber.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+	}
+
+	// TODO: Add validation for the request
+	// TODO: Implement actual user update logic in a use case
+
 	// Mock updated user data - replace with actual database operation
+	userID, _ := uuid.Parse(userClaims.Subject)
 	user := dto.UserResponse{
-		ID:            uuid.New(),
-		Email:         "user@example.com",
-		EmailVerified: true,
+		ID:            userID,
+		Email:         userClaims.Email, // Email is not updatable in this example
+		EmailVerified: true,             // Assuming email is verified
 		FirstName:     req.FirstName,
 		LastName:      req.LastName,
 		AvatarURL:     req.AvatarURL,
 		FullName:      getFullName(req.FirstName, req.LastName),
-		DisplayName:   getDisplayName(req.FirstName, req.LastName, "user@example.com"),
+		DisplayName:   getDisplayName(req.FirstName, req.LastName, userClaims.Email),
 		IsActive:      true,
 	}
 

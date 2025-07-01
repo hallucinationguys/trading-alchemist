@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/jackc/pgx/v5/pgxpool"
 
+	"trading-alchemist/internal/application/usecases"
 	"trading-alchemist/internal/config"
-	"trading-alchemist/internal/domain/services"
+	"trading-alchemist/internal/domain/repositories"
 	"trading-alchemist/internal/presentation/http/routes"
 	"trading-alchemist/internal/presentation/responses"
 )
@@ -22,7 +22,7 @@ type Server struct {
 }
 
 // NewServer creates a new HTTP server with all dependencies
-func NewServer(cfg *config.Config, db *pgxpool.Pool, emailService services.EmailService) *Server {
+func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo repositories.UserRepository) *Server {
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		ReadTimeout:    cfg.Server.ReadTimeout,
@@ -45,8 +45,11 @@ func NewServer(cfg *config.Config, db *pgxpool.Pool, emailService services.Email
 		AllowHeaders: "Origin,Content-Type,Accept,Authorization",
 	}))
 
-	// Setup all routes
-	routes.SetupRoutes(app, cfg, db, emailService)
+	// Create use cases
+	userUseCase := usecases.NewUserUseCase(userRepo)
+
+	// Setup all routes with use cases
+	routes.SetupRoutes(app, cfg, authUseCase, userUseCase)
 
 	return &Server{
 		app:    app,

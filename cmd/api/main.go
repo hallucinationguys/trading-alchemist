@@ -9,9 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"trading-alchemist/internal/application/usecases"
 	"trading-alchemist/internal/config"
 	"trading-alchemist/internal/infrastructure/database"
 	"trading-alchemist/internal/infrastructure/email"
+	"trading-alchemist/internal/infrastructure/repositories"
 	server "trading-alchemist/internal/presentation/http"
 )
 
@@ -19,33 +21,38 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
-	// Create context
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	// Create context for database connection
+	ctx := context.Background()
 
-	// Connect to database
+	// Initialize database connection
 	db, err := database.NewConnection(ctx, cfg)
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer database.Close(db)
 
-	// Initialize email service (Resend only)
+	// Initialize repositories
+	userRepo := repositories.NewPostgresUserRepository(db)
+	magicLinkRepo := repositories.NewPostgresMagicLinkRepository(db)
+
+	// Initialize services
 	emailService, err := email.NewEmailService(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize email service: %v", err)
 	}
 
-	// Create HTTP server
-	httpServer := server.NewServer(cfg, db, emailService)
+	// Initialize use cases
+	authUseCase := usecases.NewAuthUseCase(userRepo, magicLinkRepo, emailService, cfg)
+
+	// Initialize HTTP server
+	srv := server.NewServer(cfg, authUseCase, userRepo)
 
 	// Start server in a goroutine
 	go func() {
 		addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 		log.Printf("Starting server on %s", addr)
-		
-		if err := httpServer.Start(addr); err != nil {
-			log.Printf("Server error: %v", err)
+		if err := srv.Start(addr); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
@@ -53,16 +60,14 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-
 	log.Println("Shutting down server...")
 
-	// Create a deadline to wait for
-	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+	// Graceful shutdown with timeout
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Shutdown server
-	if err := httpServer.Shutdown(ctx); err != nil {
-		log.Printf("Server forced to shutdown: %v", err)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	log.Println("Server exited")

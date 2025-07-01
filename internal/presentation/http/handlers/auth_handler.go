@@ -4,18 +4,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"trading-alchemist/internal/application/dto"
+	"trading-alchemist/internal/application/usecases"
 	"trading-alchemist/internal/presentation/responses"
+	"trading-alchemist/pkg/errors"
 )
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	// In a real implementation, this would have dependencies like:
-	// authUseCase application.AuthUseCase
+	authUseCase *usecases.AuthUseCase
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler() *AuthHandler {
-	return &AuthHandler{}
+func NewAuthHandler(authUseCase *usecases.AuthUseCase) *AuthHandler {
+	return &AuthHandler{
+		authUseCase: authUseCase,
+	}
 }
 
 // SendMagicLink sends a magic link to user's email
@@ -37,12 +40,25 @@ func (h *AuthHandler) SendMagicLink(c *fiber.Ctx) error {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
 
-	// TODO: Add validation
-	// TODO: Implement actual magic link sending logic
-	
-	response := dto.SendMagicLinkResponse{
-		Message: "If this email is registered, a magic link has been sent",
-		Sent:    true,
+	// Set IP address and user agent from request
+	req.IPAddress = c.IP()
+	req.UserAgent = c.Get("User-Agent")
+
+	// Call use case
+	response, err := h.authUseCase.SendMagicLink(c.Context(), &req)
+	if err != nil {
+		// Handle different error types
+		if appErr, ok := err.(*errors.AppError); ok {
+			switch appErr.Code {
+			case errors.CodeValidation:
+				return responses.SendError(c, fiber.StatusBadRequest, string(appErr.Code), appErr.Message)
+			case errors.CodeNotFound:
+				return responses.SendError(c, fiber.StatusNotFound, string(appErr.Code), appErr.Message)
+			default:
+				return responses.SendError(c, fiber.StatusInternalServerError, string(appErr.Code), appErr.Message)
+			}
+		}
+		return responses.SendError(c, fiber.StatusInternalServerError, "INTERNAL_ERROR", "An unexpected error occurred")
 	}
 
 	return responses.SendSuccess(c, response, "Magic link sent successfully")
@@ -50,39 +66,46 @@ func (h *AuthHandler) SendMagicLink(c *fiber.Ctx) error {
 
 // VerifyMagicLink verifies a magic link token and returns JWT tokens
 // @Summary Verify magic link
-// @Description Verifies a magic link token and returns JWT access token if valid. The magic link token is consumed and cannot be used again.
+// @Description Verifies a magic link token from an email link and returns a JWT access token if valid. The magic link token is consumed and cannot be used again.
 // @Tags Authentication
 // @Accept json
 // @Produce json
 // @Param request body dto.VerifyMagicLinkRequest true "Magic link token to verify"
 // @Success 200 {object} responses.SuccessResponse{data=dto.VerifyMagicLinkResponse} "Magic link verified successfully"
-// @Failure 400 {object} responses.ErrorResponse "Invalid token format"
+// @Failure 400 {object} responses.ErrorResponse "Invalid token format or token missing"
 // @Failure 401 {object} responses.ErrorResponse "Invalid, expired, or already used token"
 // @Failure 404 {object} responses.ErrorResponse "Token not found"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /auth/verify [post]
 func (h *AuthHandler) VerifyMagicLink(c *fiber.Ctx) error {
 	var req dto.VerifyMagicLinkRequest
-	
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
 
-	// TODO: Add validation
-	// TODO: Implement actual token verification logic
-	
-	response := dto.VerifyMagicLinkResponse{
-		User: dto.UserResponse{
-			// Mock user data - replace with actual user from database
-			Email:         "user@example.com",
-			EmailVerified: true,
-			FullName:      "John Doe",
-			DisplayName:   "John Doe",
-			IsActive:      true,
-		},
-		AccessToken: "mock-jwt-token",
-		TokenType:   "Bearer",
-		ExpiresIn:   86400, // 24 hours in seconds
+	if req.Token == "" {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Token is required")
+	}
+
+	// Call use case
+	response, err := h.authUseCase.VerifyMagicLink(c.Context(), &req)
+	if err != nil {
+		// Handle different error types
+		if appErr, ok := err.(*errors.AppError); ok {
+			switch appErr.Code {
+			case errors.CodeValidation:
+				return responses.SendError(c, fiber.StatusBadRequest, string(appErr.Code), appErr.Message)
+			case errors.CodeNotFound:
+				return responses.SendError(c, fiber.StatusNotFound, string(appErr.Code), appErr.Message)
+			case errors.CodeUnauthorized:
+				return responses.SendError(c, fiber.StatusUnauthorized, string(appErr.Code), appErr.Message)
+			case errors.CodeForbidden:
+				return responses.SendError(c, fiber.StatusForbidden, string(appErr.Code), appErr.Message)
+			default:
+				return responses.SendError(c, fiber.StatusInternalServerError, string(appErr.Code), appErr.Message)
+			}
+		}
+		return responses.SendError(c, fiber.StatusInternalServerError, "INTERNAL_ERROR", "An unexpected error occurred")
 	}
 
 	return responses.SendSuccess(c, response, "Authentication successful")

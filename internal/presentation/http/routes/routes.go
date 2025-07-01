@@ -2,19 +2,22 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v5/pgxpool"
 
+	"trading-alchemist/internal/application/usecases"
 	"trading-alchemist/internal/config"
-	"trading-alchemist/internal/domain/services"
 	"trading-alchemist/internal/presentation/http/handlers"
+	"trading-alchemist/internal/presentation/http/middleware"
 )
 
 // SetupRoutes configures all application routes
-func SetupRoutes(app *fiber.App, cfg *config.Config, db *pgxpool.Pool, emailService services.EmailService) {
-	// Initialize handlers
+func SetupRoutes(app *fiber.App, cfg *config.Config, authUseCase *usecases.AuthUseCase, userUseCase *usecases.UserUseCase) {
+	// Create handlers
 	healthHandler := handlers.NewHealthHandler()
-	authHandler := handlers.NewAuthHandler()
-	userHandler := handlers.NewUserHandler()
+	authHandler := handlers.NewAuthHandler(authUseCase)
+	userHandler := handlers.NewUserHandler(userUseCase, authUseCase)
+
+	// Create auth middleware
+	authMiddleware := middleware.NewAuthMiddleware(authUseCase)
 
 	// Health check endpoints (outside API versioning for monitoring)
 	app.Get("/health", healthHandler.CheckHealth)
@@ -26,10 +29,10 @@ func SetupRoutes(app *fiber.App, cfg *config.Config, db *pgxpool.Pool, emailServ
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 
-	// Setup versioned routes
+	// Setup routes for each handler
+	setupHealthRoutes(v1, healthHandler)
 	setupV1AuthRoutes(v1, authHandler)
-	setupV1UserRoutes(v1, userHandler)
-	setupV1HealthRoutes(v1, healthHandler)
+	setupV1UserRoutes(v1, userHandler, authMiddleware)
 }
 
 // setupDocumentationRoutes sets up Swagger documentation routes
@@ -67,12 +70,21 @@ func setupDocumentationRoutes(app *fiber.App) {
 	})
 }
 
+// setupHealthRoutes configures health check routes
+func setupHealthRoutes(v1 fiber.Router, healthHandler *handlers.HealthHandler) {
+	health := v1.Group("/health")
+	health.Get("", healthHandler.CheckHealth)
+}
+
 // setupV1AuthRoutes configures v1 authentication routes
 func setupV1AuthRoutes(v1 fiber.Router, authHandler *handlers.AuthHandler) {
 	auth := v1.Group("/auth")
 
 	// Authentication endpoints
 	auth.Post("/magic-link", authHandler.SendMagicLink)      // POST /api/v1/auth/magic-link
+
+	// NOTE: This endpoint is POST to allow the frontend to securely send
+	// the token in the request body after extracting it from the URL.
 	auth.Post("/verify", authHandler.VerifyMagicLink)        // POST /api/v1/auth/verify
 	
 	// TODO: Implement additional auth endpoints in the future
@@ -83,12 +95,13 @@ func setupV1AuthRoutes(v1 fiber.Router, authHandler *handlers.AuthHandler) {
 }
 
 // setupV1UserRoutes configures v1 user routes
-func setupV1UserRoutes(v1 fiber.Router, userHandler *handlers.UserHandler) {
+func setupV1UserRoutes(v1 fiber.Router, userHandler *handlers.UserHandler, authMiddleware fiber.Handler) {
 	users := v1.Group("/users")
 
-	// User profile endpoints
-	users.Get("/profile", userHandler.GetProfile)           // GET /api/v1/users/profile
-	users.Put("/profile", userHandler.UpdateProfile)        // PUT /api/v1/users/profile
+	// Protected user routes
+	users.Use(authMiddleware)
+	users.Get("/profile", userHandler.GetProfile)
+	users.Put("/profile", userHandler.UpdateProfile)
 	
 	// TODO: Implement additional user endpoints in the future
 	// users.Patch("/profile", userHandler.PatchProfile)     // PATCH /api/v1/users/profile
