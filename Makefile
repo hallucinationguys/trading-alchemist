@@ -1,4 +1,4 @@
-.PHONY: help build run test clean docker-up docker-down migrate-up migrate-down sqlc-generate docker-build docker-dev docker-prod
+.PHONY: help build run test clean docker-up docker-down migrate-up migrate-down seed sqlc-generate docker-build docker-dev docker-prod
 
 # Variables
 BINARY_NAME=trading-alchemist
@@ -105,6 +105,10 @@ migrate-down: ## Run database migrations down
 
 migrate-create: ## Create new migration file (usage: make migrate-create name=create_table_name)
 	migrate create -ext sql -dir $(MIGRATION_PATH) -seq $(name)
+
+# Database commands
+seed: ## Seed the database with initial data
+	go run cmd/seeder/main.go
 
 # Database commands for Docker
 docker-migrate-up: ## Run migrations in Docker environment

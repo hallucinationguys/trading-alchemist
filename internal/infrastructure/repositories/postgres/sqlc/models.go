@@ -10,6 +10,33 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Artifact struct {
+	ID          pgtype.UUID        `json:"id"`
+	MessageID   pgtype.UUID        `json:"message_id"`
+	Title       string             `json:"title"`
+	Type        string             `json:"type"`
+	Language    pgtype.Text        `json:"language"`
+	Content     pgtype.Text        `json:"content"`
+	ContentHash pgtype.Text        `json:"content_hash"`
+	Size        pgtype.Int8        `json:"size"`
+	IsPublic    pgtype.Bool        `json:"is_public"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Conversation struct {
+	ID            pgtype.UUID        `json:"id"`
+	UserID        pgtype.UUID        `json:"user_id"`
+	Title         string             `json:"title"`
+	ModelID       pgtype.UUID        `json:"model_id"`
+	SystemPrompt  pgtype.Text        `json:"system_prompt"`
+	Settings      []byte             `json:"settings"`
+	IsArchived    pgtype.Bool        `json:"is_archived"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+	LastMessageAt pgtype.Timestamptz `json:"last_message_at"`
+}
+
 type MagicLink struct {
 	ID        pgtype.UUID        `json:"id"`
 	UserID    pgtype.UUID        `json:"user_id"`
@@ -23,6 +50,64 @@ type MagicLink struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type Message struct {
+	ID             pgtype.UUID        `json:"id"`
+	ConversationID pgtype.UUID        `json:"conversation_id"`
+	ParentID       pgtype.UUID        `json:"parent_id"`
+	Role           string             `json:"role"`
+	Content        pgtype.Text        `json:"content"`
+	ModelID        pgtype.UUID        `json:"model_id"`
+	TokenCount     pgtype.Int4        `json:"token_count"`
+	Cost           pgtype.Numeric     `json:"cost"`
+	Metadata       []byte             `json:"metadata"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type MessageTool struct {
+	ID         pgtype.UUID        `json:"id"`
+	MessageID  pgtype.UUID        `json:"message_id"`
+	ToolID     pgtype.UUID        `json:"tool_id"`
+	Input      []byte             `json:"input"`
+	Output     []byte             `json:"output"`
+	ExecutedAt pgtype.Timestamptz `json:"executed_at"`
+	Duration   pgtype.Int8        `json:"duration"`
+	Success    pgtype.Bool        `json:"success"`
+	Error      pgtype.Text        `json:"error"`
+}
+
+type Model struct {
+	ID                pgtype.UUID        `json:"id"`
+	ProviderID        pgtype.UUID        `json:"provider_id"`
+	Name              string             `json:"name"`
+	DisplayName       string             `json:"display_name"`
+	SupportsFunctions pgtype.Bool        `json:"supports_functions"`
+	SupportsVision    pgtype.Bool        `json:"supports_vision"`
+	IsActive          pgtype.Bool        `json:"is_active"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Provider struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	DisplayName string             `json:"display_name"`
+	IsActive    pgtype.Bool        `json:"is_active"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Tool struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	Schema      []byte             `json:"schema"`
+	ProviderID  pgtype.UUID        `json:"provider_id"`
+	IsActive    pgtype.Bool        `json:"is_active"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
 type User struct {
 	ID            pgtype.UUID        `json:"id"`
 	Email         string             `json:"email"`
@@ -33,4 +118,15 @@ type User struct {
 	IsActive      pgtype.Bool        `json:"is_active"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserProviderSetting struct {
+	ID              pgtype.UUID        `json:"id"`
+	UserID          pgtype.UUID        `json:"user_id"`
+	ProviderID      pgtype.UUID        `json:"provider_id"`
+	EncryptedApiKey pgtype.Text        `json:"encrypted_api_key"`
+	ApiBaseOverride pgtype.Text        `json:"api_base_override"`
+	IsActive        pgtype.Bool        `json:"is_active"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"encoding/base64"
+
 	"github.com/spf13/viper"
 )
 
@@ -60,11 +62,13 @@ type JWTConfig struct {
 }
 
 type AppConfig struct {
-	Name         string
-	Environment  string
-	BaseURL      string
+	Name            string
+	Environment     string
+	BaseURL         string
 	FrontendBaseURL string
-	MagicLinkTTL string
+	MagicLinkTTL    string
+	DefaultModel    string
+	EncryptionKey   string
 }
 
 // Load loads configuration from environment variables using Viper
@@ -107,11 +111,13 @@ func Load() *Config {
 			TTL:    v.GetString("JWT_TTL"),
 		},
 		App: AppConfig{
-			Name:         v.GetString("APP_NAME"),
-			Environment:  v.GetString("APP_ENV"),
-			BaseURL:      v.GetString("APP_BASE_URL"),
+			Name:            v.GetString("APP_NAME"),
+			Environment:     v.GetString("APP_ENV"),
+			BaseURL:         v.GetString("APP_BASE_URL"),
 			FrontendBaseURL: v.GetString("FRONTEND_BASE_URL"),
-			MagicLinkTTL: v.GetString("MAGIC_LINK_TTL"),
+			MagicLinkTTL:    v.GetString("MAGIC_LINK_TTL"),
+			DefaultModel:    v.GetString("DEFAULT_MODEL"),
+			EncryptionKey:   v.GetString("ENCRYPTION_KEY"),
 		},
 	}
 }
@@ -179,6 +185,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("APP_BASE_URL", "http://localhost:8080")
 	v.SetDefault("FRONTEND_BASE_URL", "http://localhost:3000")
 	v.SetDefault("MAGIC_LINK_TTL", "15m")
+	v.SetDefault("DEFAULT_MODEL", "openai/gpt-4o-mini")
+	v.SetDefault("ENCRYPTION_KEY", "")
 }
 
 // LoadForEnvironment loads configuration for a specific environment
@@ -203,6 +211,27 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// GetEncryptionKey returns the encryption key as a 32-byte array for AES-256.
+// The key is expected to be base64-encoded in the configuration.
+func (c *Config) GetEncryptionKey() ([]byte, error) {
+	if c.App.EncryptionKey == "" {
+		return nil, fmt.Errorf("encryption key is not configured")
+	}
+	
+	// Decode from base64
+	key, err := base64.StdEncoding.DecodeString(c.App.EncryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode encryption key from base64: %w", err)
+	}
+	
+	// Validate key size (must be 32 bytes for AES-256)
+	if len(key) != 32 {
+		return nil, fmt.Errorf("encryption key must be exactly 32 bytes for AES-256, got %d bytes", len(key))
+	}
+	
+	return key, nil
 }
 
 // GetConfigPath returns the path to the config file for the given environment

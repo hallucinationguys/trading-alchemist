@@ -20,11 +20,18 @@ type DBTX interface {
 	QueryRow(context.Context, string, ...interface{}) pgx.Row
 }
 
-// RepositoryProvider defines an interface for accessing repositories.
-// This allows for easy mocking in tests and keeps a clean separation of concerns.
+// RepositoryProvider defines the interface for accessing all repositories.
+// This allows use cases to depend on this interface for transactional database operations.
 type RepositoryProvider interface {
 	User() repositories.UserRepository
 	MagicLink() repositories.MagicLinkRepository
+	Provider() repositories.ProviderRepository
+	UserProviderSetting() repositories.UserProviderSettingRepository
+	Conversation() repositories.ConversationRepository
+	Message() repositories.MessageRepository
+	Artifact() repositories.ArtifactRepository
+	Tool() repositories.ToolRepository
+	Model() repositories.ModelRepository
 }
 
 // transactionalRepositoryProvider provides repositories that are bound to a specific database transaction.
@@ -43,6 +50,34 @@ func (p *transactionalRepositoryProvider) User() repositories.UserRepository {
 
 func (p *transactionalRepositoryProvider) MagicLink() repositories.MagicLinkRepository {
 	return postgres.NewMagicLinkRepository(p.tx)
+}
+
+func (p *transactionalRepositoryProvider) Conversation() repositories.ConversationRepository {
+	return postgres.NewConversationRepository(p.tx)
+}
+
+func (p *transactionalRepositoryProvider) Message() repositories.MessageRepository {
+	return postgres.NewMessageRepository(p.tx)
+}
+
+func (p *transactionalRepositoryProvider) Artifact() repositories.ArtifactRepository {
+	return postgres.NewArtifactRepository(p.tx)
+}
+
+func (p *transactionalRepositoryProvider) Provider() repositories.ProviderRepository {
+	return postgres.NewProviderRepository(p.tx)
+}
+
+func (p *transactionalRepositoryProvider) Tool() repositories.ToolRepository {
+	return postgres.NewToolRepository(p.tx)
+}
+
+func (p *transactionalRepositoryProvider) UserProviderSetting() repositories.UserProviderSettingRepository {
+	return postgres.NewUserProviderSettingRepository(p.tx)
+}
+
+func (trp *transactionalRepositoryProvider) Model() repositories.ModelRepository {
+	return postgres.NewModelRepository(trp.tx)
 }
 
 // Service provides a high-level abstraction for database operations,

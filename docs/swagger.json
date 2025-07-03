@@ -87,7 +87,7 @@
         },
         "/auth/verify": {
             "post": {
-                "description": "Verifies a magic link token and returns JWT access token if valid. The magic link token is consumed and cannot be used again.",
+                "description": "Verifies a magic link token from an email link and returns a JWT access token if valid. The magic link token is consumed and cannot be used again.",
                 "consumes": [
                     "application/json"
                 ],
@@ -129,7 +129,7 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid token format",
+                        "description": "Invalid token format or token missing",
                         "schema": {
                             "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
                         }
@@ -142,6 +142,299 @@
                     },
                     "404": {
                         "description": "Token not found",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of active conversations for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Get user's conversations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of conversations to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversations retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ConversationSummaryResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates a new chat session for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Create a new conversation",
+                "parameters": [
+                    {
+                        "description": "Conversation creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.CreateConversationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Conversation created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.ConversationDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves the full details of a single conversation, including its messages, for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Get conversation details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation details retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.ConversationDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid conversation ID format",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User does not own this conversation",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Conversation not found",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations/{id}/messages": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Sends a message to a conversation and streams the LLM's response back using Server-Sent Events (SSE).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Post a message and get a streaming response",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.PostMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "text/event-stream response",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or ID format",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User does not own this conversation",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Conversation not found",
                         "schema": {
                             "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
                         }
@@ -189,6 +482,307 @@
                     },
                     "503": {
                         "description": "Service is unhealthy",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/providers": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves a list of all active LLM providers supported by the system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Providers"
+                ],
+                "summary": "List available providers",
+                "responses": {
+                    "200": {
+                        "description": "Providers retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ProviderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/providers/available-models": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves all available models with their API key configuration status in a single optimized call",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Providers"
+                ],
+                "summary": "Get available models with API key status",
+                "responses": {
+                    "200": {
+                        "description": "Available models retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ProviderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/providers/settings": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves all provider settings for the currently authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Providers"
+                ],
+                "summary": "List user's provider settings",
+                "responses": {
+                    "200": {
+                        "description": "User provider settings retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserProviderSettingResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Creates or updates a provider setting (API key, base URL) for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Providers"
+                ],
+                "summary": "Create or update a provider setting",
+                "parameters": [
+                    {
+                        "description": "Provider setting information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UpsertUserProviderSettingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Provider setting saved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserProviderSettingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Provider not found",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tools": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves a list of all active tools that can be used by the LLM. Can be filtered by provider.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Get available tools",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter tools by a specific provider ID",
+                        "name": "provider_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tools retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ToolResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
                         }
@@ -350,6 +944,107 @@
                 }
             }
         },
+        "trading-alchemist_internal_application_dto.ArtifactResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.ConversationDetailResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.MessageResponse"
+                    }
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "system_prompt": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.ConversationSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "last_message_at": {
+                    "type": "string"
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.CreateArtifactRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "title",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.CreateConversationRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "model_name": {
+                    "description": "e.g., \"gpt-4o-mini\". Defaults to a system-wide default if not provided.",
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
         "trading-alchemist_internal_application_dto.GetUserResponse": {
             "type": "object",
             "properties": {
@@ -363,6 +1058,101 @@
                 }
             }
         },
+        "trading-alchemist_internal_application_dto.JSONB": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "trading-alchemist_internal_application_dto.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "artifacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.ArtifactResponse"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.ModelResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "Example: [\"LLM\", \"CHAT\", \"200K\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.PostMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "artifacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.CreateArtifactRequest"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "model_id": {
+                    "description": "Optional: use specific model for this message",
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.ProviderResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "models": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.ModelResponse"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "trading-alchemist_internal_application_dto.SendMagicLinkRequest": {
             "type": "object",
             "required": [
@@ -370,11 +1160,11 @@
             ],
             "properties": {
                 "email": {
-                    "description": "Email address to send the magic link to\nrequired: true\nexample: user@example.com",
+                    "description": "Email address to send the magic link to",
                     "type": "string"
                 },
                 "purpose": {
-                    "description": "Purpose of the magic link (login, email_verification, password_reset)\nexample: login",
+                    "description": "Purpose of the magic link (login, email_verification, password_reset)",
                     "type": "string"
                 }
             }
@@ -383,12 +1173,29 @@
             "type": "object",
             "properties": {
                 "message": {
-                    "description": "Response message\nexample: If this email is registered, a magic link has been sent",
+                    "description": "Response message",
                     "type": "string"
                 },
                 "sent": {
-                    "description": "Whether the email was sent successfully\nexample: true",
+                    "description": "Whether the email was sent successfully",
                     "type": "boolean"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.ToolResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "$ref": "#/definitions/trading-alchemist_internal_application_dto.JSONB"
                 }
             }
         },
@@ -396,17 +1203,17 @@
             "type": "object",
             "properties": {
                 "avatar_url": {
-                    "description": "Avatar URL\nexample: https://example.com/avatar.jpg",
+                    "description": "Avatar URL",
                     "type": "string"
                 },
                 "first_name": {
-                    "description": "First name (1-100 characters)\nexample: John",
+                    "description": "First name (1-100 characters)",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "last_name": {
-                    "description": "Last name (1-100 characters)\nexample: Doe",
+                    "description": "Last name (1-100 characters)",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
@@ -426,51 +1233,102 @@
                 }
             }
         },
+        "trading-alchemist_internal_application_dto.UpsertUserProviderSettingRequest": {
+            "type": "object",
+            "required": [
+                "api_key",
+                "provider_id"
+            ],
+            "properties": {
+                "api_base_override": {
+                    "type": "string"
+                },
+                "api_key": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "provider_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.UserProviderSettingResponse": {
+            "type": "object",
+            "properties": {
+                "api_base_override": {
+                    "type": "string"
+                },
+                "api_key_set": {
+                    "description": "Indicates if the API key is configured, without exposing the key.",
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "provider_display_name": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "string"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "trading-alchemist_internal_application_dto.UserResponse": {
             "type": "object",
             "properties": {
                 "avatar_url": {
-                    "description": "Avatar URL\nexample: https://example.com/avatar.jpg",
+                    "description": "Avatar URL",
                     "type": "string"
                 },
                 "created_at": {
-                    "description": "Account creation timestamp\nexample: 2023-12-01T10:00:00Z",
+                    "description": "Account creation timestamp",
                     "type": "string"
                 },
                 "display_name": {
-                    "description": "Display name\nexample: John Doe",
+                    "description": "Display name",
                     "type": "string"
                 },
                 "email": {
-                    "description": "Email address\nexample: user@example.com",
+                    "description": "Email address",
                     "type": "string"
                 },
                 "email_verified": {
-                    "description": "Whether email is verified\nexample: true",
+                    "description": "Whether email is verified",
                     "type": "boolean"
                 },
                 "first_name": {
-                    "description": "First name\nexample: John",
+                    "description": "First name",
                     "type": "string"
                 },
                 "full_name": {
-                    "description": "Full name (computed from first and last name)\nexample: John Doe",
+                    "description": "Full name (computed from first and last name)",
                     "type": "string"
                 },
                 "id": {
-                    "description": "User ID\nexample: 123e4567-e89b-12d3-a456-426614174000",
+                    "description": "User ID",
                     "type": "string"
                 },
                 "is_active": {
-                    "description": "Whether user is active\nexample: true",
+                    "description": "Whether user is active",
                     "type": "boolean"
                 },
                 "last_name": {
-                    "description": "Last name\nexample: Doe",
+                    "description": "Last name",
                     "type": "string"
                 },
                 "updated_at": {
-                    "description": "Last update timestamp\nexample: 2023-12-01T10:00:00Z",
+                    "description": "Last update timestamp",
                     "type": "string"
                 }
             }
@@ -482,7 +1340,7 @@
             ],
             "properties": {
                 "token": {
-                    "description": "Magic link token to verify\nrequired: true\nexample: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "description": "Magic link token to verify",
                     "type": "string"
                 }
             }
@@ -491,15 +1349,15 @@
             "type": "object",
             "properties": {
                 "access_token": {
-                    "description": "JWT access token\nexample: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "description": "JWT access token",
                     "type": "string"
                 },
                 "expires_in": {
-                    "description": "Token expiration in seconds\nexample: 86400",
+                    "description": "Token expiration in seconds",
                     "type": "integer"
                 },
                 "token_type": {
-                    "description": "Token type\nexample: Bearer",
+                    "description": "Token type",
                     "type": "string"
                 },
                 "user": {

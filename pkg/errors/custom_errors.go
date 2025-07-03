@@ -9,6 +9,12 @@ import (
 var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrUserAlreadyExists     = errors.New("user already exists")
+	ErrProviderNotFound      = errors.New("provider not found")
+	ErrUserProviderSettingNotFound = errors.New("user provider setting not found")
+	ErrModelNotFound         = errors.New("model not found")
+	ErrConversationNotFound  = errors.New("conversation not found")
+	ErrMessageNotFound       = errors.New("message not found")
+	ErrArtifactNotFound      = errors.New("artifact not found")
 	ErrInvalidEmail          = errors.New("invalid email address")
 	ErrInvalidCredentials    = errors.New("invalid credentials")
 	ErrMagicLinkNotFound     = errors.New("magic link not found")
@@ -59,4 +65,11 @@ const (
 	CodeConflict       = "CONFLICT"
 	CodeInternalServer = "INTERNAL_SERVER_ERROR"
 	CodeBadRequest     = "BAD_REQUEST"
+	CodeConfiguration  = "CONFIGURATION_ERROR"
+)
+
+// Standard application errors
+var (
+	ErrBadRequest        = errors.New("bad request")
+	ErrBadGateway        = errors.New("bad gateway")
 ) 

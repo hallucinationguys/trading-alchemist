@@ -8,14 +8,6 @@ import (
 	"trading-alchemist/internal/presentation/responses"
 )
 
-// HealthHandler handles health check requests
-type HealthHandler struct{}
-
-// NewHealthHandler creates a new health handler
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
-}
-
 // HealthResponse represents the health check response
 //
 // swagger:model HealthResponse
@@ -43,10 +35,10 @@ type HealthResponse struct {
 // @Success 200 {object} responses.SuccessResponse{data=HealthResponse} "Service is healthy"
 // @Failure 503 {object} responses.ErrorResponse "Service is unhealthy"
 // @Router /health [get]
-func (h *HealthHandler) CheckHealth(c *fiber.Ctx) error {
+func CheckHealth(c *fiber.Ctx) error {
 	// TODO: Add database connectivity check
 	// TODO: Add external service health checks
-	
+
 	healthData := HealthResponse{
 		Status:    "ok",
 		Timestamp: time.Now().Format(time.RFC3339),

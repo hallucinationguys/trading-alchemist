@@ -144,3 +144,6 @@ secrets/
 credentials/
 *.secret
 *-key.json
+
+.cursorignore
+.cursorindexignore

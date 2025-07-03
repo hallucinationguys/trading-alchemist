@@ -82,31 +82,33 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
 
+	// Validate the request fields
+	if req.FirstName != nil && !utils.ValidateStringLength(*req.FirstName, 1, 100) {
+		return responses.SendError(c, fiber.StatusBadRequest, "VALIDATION_ERROR", "First name must be between 1 and 100 characters")
+	}
+	if req.LastName != nil && !utils.ValidateStringLength(*req.LastName, 1, 100) {
+		return responses.SendError(c, fiber.StatusBadRequest, "VALIDATION_ERROR", "Last name must be between 1 and 100 characters")
+	}
+
 	// Extract user from context
 	userClaims, ok := c.Locals("user").(*utils.Claims)
 	if !ok || userClaims == nil {
 		return responses.SendError(c, fiber.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 	}
 
-	// TODO: Add validation for the request
-	// TODO: Implement actual user update logic in a use case
+	userID, err := uuid.Parse(userClaims.Subject)
+	if err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid user ID format")
+	}
 
-	// Mock updated user data - replace with actual database operation
-	userID, _ := uuid.Parse(userClaims.Subject)
-	user := dto.UserResponse{
-		ID:            userID,
-		Email:         userClaims.Email, // Email is not updatable in this example
-		EmailVerified: true,             // Assuming email is verified
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		AvatarURL:     req.AvatarURL,
-		FullName:      getFullName(req.FirstName, req.LastName),
-		DisplayName:   getDisplayName(req.FirstName, req.LastName, userClaims.Email),
-		IsActive:      true,
+	// Call use case to update profile
+	updatedUser, err := h.userUseCase.UpdateUserProfile(c.Context(), userID, &req)
+	if err != nil {
+		return responses.HandleError(c, err)
 	}
 
 	response := dto.UpdateUserResponse{
-		User: user,
+		User: *updatedUser,
 	}
 
 	return responses.SendSuccess(c, response, "Profile updated successfully")

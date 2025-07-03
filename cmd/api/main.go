@@ -13,63 +13,76 @@ import (
 	"trading-alchemist/internal/config"
 	"trading-alchemist/internal/infrastructure/database"
 	"trading-alchemist/internal/infrastructure/email"
-	postgres "trading-alchemist/internal/infrastructure/repositories/postgres"
+	"trading-alchemist/internal/infrastructure/llm/agent"
+	"trading-alchemist/internal/infrastructure/repositories/postgres"
 	server "trading-alchemist/internal/presentation/http"
 )
 
 func main() {
 	// Load configuration
 	cfg := config.Load()
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("Configuration validation failed: %v", err)
+	}
 
-	// Create context for database connection
-	ctx := context.Background()
+	// Create context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// Initialize database connection
-	db, err := database.NewConnection(ctx, cfg)
+	// Setup database connection
+	dbPool, err := database.NewConnection(ctx, cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close(db)
+	defer database.Close(dbPool)
 
-	// Initialize repositories
-	userRepo := postgres.NewUserRepository(db)
-	magicLinkRepo := postgres.NewMagicLinkRepository(db)
+	// Setup database service
+	dbService := database.NewService(dbPool)
 
-	// Initialize services
-	dbService := database.NewService(db)
+	// Setup email service
 	emailService, err := email.NewEmailService(cfg)
 	if err != nil {
-		log.Fatalf("Failed to initialize email service: %v", err)
+		log.Fatalf("Failed to create email service: %v", err)
 	}
+
+	// Setup LLM service
+	llmService, err := agent.NewLLMService()
+	if err != nil {
+		log.Fatalf("Failed to create LLM service: %v", err)
+	}
+
+	// Initialize repositories
+	userRepo := postgres.NewUserRepository(dbPool)
+	magicLinkRepo := postgres.NewMagicLinkRepository(dbPool)
 
 	// Initialize use cases
 	authUseCase := usecases.NewAuthUseCase(userRepo, magicLinkRepo, emailService, cfg, dbService)
 
 	// Initialize HTTP server
-	srv := server.NewServer(cfg, authUseCase, userRepo)
+	httpServer := server.NewServer(cfg, authUseCase, userRepo, dbService, llmService)
 
 	// Start server in a goroutine
 	go func() {
 		addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 		log.Printf("Starting server on %s", addr)
-		if err := srv.Start(addr); err != nil {
+		if err := httpServer.Start(addr); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server
+	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down server...")
 
-	// Graceful shutdown with timeout
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	// Shutdown context with a timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
-	log.Println("Server exited")
+	log.Println("Server exited properly")
 } 

@@ -11,6 +11,9 @@ import (
 	"trading-alchemist/internal/application/usecases"
 	"trading-alchemist/internal/config"
 	"trading-alchemist/internal/domain/repositories"
+	"trading-alchemist/internal/domain/services"
+	"trading-alchemist/internal/infrastructure/database"
+	infraServices "trading-alchemist/internal/infrastructure/services"
 	"trading-alchemist/internal/presentation/http/routes"
 	"trading-alchemist/internal/presentation/responses"
 )
@@ -22,7 +25,7 @@ type Server struct {
 }
 
 // NewServer creates a new HTTP server with all dependencies
-func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo repositories.UserRepository) *Server {
+func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo repositories.UserRepository, dbService *database.Service, llmService services.LLMService) *Server {
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		ReadTimeout:    cfg.Server.ReadTimeout,
@@ -47,9 +50,23 @@ func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo r
 
 	// Create use cases
 	userUseCase := usecases.NewUserUseCase(userRepo)
+	chatUseCase := usecases.NewChatUseCase(dbService, cfg, llmService)
+	providerUseCase := usecases.NewUserProviderSettingUseCase(dbService, cfg)
+	
+	// Create API key service and model availability use case
+	// We create a temporary repository provider to access the user provider setting repository
+	var modelAvailabilityUseCase *usecases.ModelAvailabilityUseCase
+	err := dbService.ExecuteInTx(context.Background(), func(provider database.RepositoryProvider) error {
+		apiKeyService := infraServices.NewAPIKeyService(provider.UserProviderSetting())
+		modelAvailabilityUseCase = usecases.NewModelAvailabilityUseCase(dbService, apiKeyService)
+		return nil
+	})
+	if err != nil {
+		panic("Failed to create model availability use case: " + err.Error())
+	}
 
 	// Setup all routes with use cases
-	routes.SetupRoutes(app, cfg, authUseCase, userUseCase)
+	routes.SetupRoutes(app, cfg, authUseCase, userUseCase, chatUseCase, providerUseCase, modelAvailabilityUseCase)
 
 	return &Server{
 		app:    app,

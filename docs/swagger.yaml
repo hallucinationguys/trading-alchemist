@@ -23,6 +23,75 @@ definitions:
           example: 1.0.0
         type: string
     type: object
+  trading-alchemist_internal_application_dto.ArtifactResponse:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      language:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.ConversationDetailResponse:
+    properties:
+      id:
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.MessageResponse'
+        type: array
+      model_id:
+        type: string
+      system_prompt:
+        type: string
+      title:
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.ConversationSummaryResponse:
+    properties:
+      id:
+        type: string
+      last_message_at:
+        type: string
+      model_id:
+        type: string
+      title:
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.CreateArtifactRequest:
+    properties:
+      content:
+        type: string
+      language:
+        type: string
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      type:
+        type: string
+    required:
+    - content
+    - title
+    - type
+    type: object
+  trading-alchemist_internal_application_dto.CreateConversationRequest:
+    properties:
+      model_name:
+        description: e.g., "gpt-4o-mini". Defaults to a system-wide default if not
+          provided.
+        type: string
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
   trading-alchemist_internal_application_dto.GetUserResponse:
     properties:
       user:
@@ -30,18 +99,76 @@ definitions:
         - $ref: '#/definitions/trading-alchemist_internal_application_dto.UserResponse'
         description: User information
     type: object
+  trading-alchemist_internal_application_dto.JSONB:
+    additionalProperties: true
+    type: object
+  trading-alchemist_internal_application_dto.MessageResponse:
+    properties:
+      artifacts:
+        items:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.ArtifactResponse'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+    type: object
+  trading-alchemist_internal_application_dto.ModelResponse:
+    properties:
+      display_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      tags:
+        description: 'Example: ["LLM", "CHAT", "200K"]'
+        items:
+          type: string
+        type: array
+    type: object
+  trading-alchemist_internal_application_dto.PostMessageRequest:
+    properties:
+      artifacts:
+        items:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.CreateArtifactRequest'
+        type: array
+      content:
+        type: string
+      model_id:
+        description: 'Optional: use specific model for this message'
+        type: string
+    required:
+    - content
+    type: object
+  trading-alchemist_internal_application_dto.ProviderResponse:
+    properties:
+      display_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      models:
+        items:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.ModelResponse'
+        type: array
+      name:
+        type: string
+    type: object
   trading-alchemist_internal_application_dto.SendMagicLinkRequest:
     properties:
       email:
-        description: |-
-          Email address to send the magic link to
-          required: true
-          example: user@example.com
+        description: Email address to send the magic link to
         type: string
       purpose:
-        description: |-
-          Purpose of the magic link (login, email_verification, password_reset)
-          example: login
+        description: Purpose of the magic link (login, email_verification, password_reset)
         type: string
     required:
     - email
@@ -49,34 +176,35 @@ definitions:
   trading-alchemist_internal_application_dto.SendMagicLinkResponse:
     properties:
       message:
-        description: |-
-          Response message
-          example: If this email is registered, a magic link has been sent
+        description: Response message
         type: string
       sent:
-        description: |-
-          Whether the email was sent successfully
-          example: true
+        description: Whether the email was sent successfully
         type: boolean
+    type: object
+  trading-alchemist_internal_application_dto.ToolResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      schema:
+        $ref: '#/definitions/trading-alchemist_internal_application_dto.JSONB'
     type: object
   trading-alchemist_internal_application_dto.UpdateUserRequest:
     properties:
       avatar_url:
-        description: |-
-          Avatar URL
-          example: https://example.com/avatar.jpg
+        description: Avatar URL
         type: string
       first_name:
-        description: |-
-          First name (1-100 characters)
-          example: John
+        description: First name (1-100 characters)
         maxLength: 100
         minLength: 1
         type: string
       last_name:
-        description: |-
-          Last name (1-100 characters)
-          example: Doe
+        description: Last name (1-100 characters)
         maxLength: 100
         minLength: 1
         type: string
@@ -88,71 +216,81 @@ definitions:
         - $ref: '#/definitions/trading-alchemist_internal_application_dto.UserResponse'
         description: Updated user information
     type: object
+  trading-alchemist_internal_application_dto.UpsertUserProviderSettingRequest:
+    properties:
+      api_base_override:
+        type: string
+      api_key:
+        type: string
+      is_active:
+        type: boolean
+      provider_id:
+        type: string
+    required:
+    - api_key
+    - provider_id
+    type: object
+  trading-alchemist_internal_application_dto.UserProviderSettingResponse:
+    properties:
+      api_base_override:
+        type: string
+      api_key_set:
+        description: Indicates if the API key is configured, without exposing the
+          key.
+        type: boolean
+      id:
+        type: string
+      is_active:
+        type: boolean
+      provider_display_name:
+        type: string
+      provider_id:
+        type: string
+      provider_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   trading-alchemist_internal_application_dto.UserResponse:
     properties:
       avatar_url:
-        description: |-
-          Avatar URL
-          example: https://example.com/avatar.jpg
+        description: Avatar URL
         type: string
       created_at:
-        description: |-
-          Account creation timestamp
-          example: 2023-12-01T10:00:00Z
+        description: Account creation timestamp
         type: string
       display_name:
-        description: |-
-          Display name
-          example: John Doe
+        description: Display name
         type: string
       email:
-        description: |-
-          Email address
-          example: user@example.com
+        description: Email address
         type: string
       email_verified:
-        description: |-
-          Whether email is verified
-          example: true
+        description: Whether email is verified
         type: boolean
       first_name:
-        description: |-
-          First name
-          example: John
+        description: First name
         type: string
       full_name:
-        description: |-
-          Full name (computed from first and last name)
-          example: John Doe
+        description: Full name (computed from first and last name)
         type: string
       id:
-        description: |-
-          User ID
-          example: 123e4567-e89b-12d3-a456-426614174000
+        description: User ID
         type: string
       is_active:
-        description: |-
-          Whether user is active
-          example: true
+        description: Whether user is active
         type: boolean
       last_name:
-        description: |-
-          Last name
-          example: Doe
+        description: Last name
         type: string
       updated_at:
-        description: |-
-          Last update timestamp
-          example: 2023-12-01T10:00:00Z
+        description: Last update timestamp
         type: string
     type: object
   trading-alchemist_internal_application_dto.VerifyMagicLinkRequest:
     properties:
       token:
-        description: |-
-          Magic link token to verify
-          required: true
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        description: Magic link token to verify
         type: string
     required:
     - token
@@ -160,19 +298,13 @@ definitions:
   trading-alchemist_internal_application_dto.VerifyMagicLinkResponse:
     properties:
       access_token:
-        description: |-
-          JWT access token
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        description: JWT access token
         type: string
       expires_in:
-        description: |-
-          Token expiration in seconds
-          example: 86400
+        description: Token expiration in seconds
         type: integer
       token_type:
-        description: |-
-          Token type
-          example: Bearer
+        description: Token type
         type: string
       user:
         allOf:
@@ -284,8 +416,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Verifies a magic link token and returns JWT access token if valid.
-        The magic link token is consumed and cannot be used again.
+      description: Verifies a magic link token from an email link and returns a JWT
+        access token if valid. The magic link token is consumed and cannot be used
+        again.
       parameters:
       - description: Magic link token to verify
         in: body
@@ -306,7 +439,7 @@ paths:
                   $ref: '#/definitions/trading-alchemist_internal_application_dto.VerifyMagicLinkResponse'
               type: object
         "400":
-          description: Invalid token format
+          description: Invalid token format or token missing
           schema:
             $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
         "401":
@@ -324,6 +457,189 @@ paths:
       summary: Verify magic link
       tags:
       - Authentication
+  /conversations:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of active conversations for the authenticated
+        user.
+      parameters:
+      - default: 20
+        description: Number of conversations to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Conversations retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/trading-alchemist_internal_application_dto.ConversationSummaryResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get user's conversations
+      tags:
+      - Chat
+    post:
+      consumes:
+      - application/json
+      description: Creates a new chat session for the authenticated user.
+      parameters:
+      - description: Conversation creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.CreateConversationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Conversation created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.ConversationDetailResponse'
+              type: object
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create a new conversation
+      tags:
+      - Chat
+  /conversations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the full details of a single conversation, including
+        its messages, for the authenticated user.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Conversation details retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.ConversationDetailResponse'
+              type: object
+        "400":
+          description: Invalid conversation ID format
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "403":
+          description: Forbidden - User does not own this conversation
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: Conversation not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get conversation details
+      tags:
+      - Chat
+  /conversations/{id}/messages:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message to a conversation and streams the LLM's response
+        back using Server-Sent Events (SSE).
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Message content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.PostMessageRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: text/event-stream response
+          schema:
+            type: string
+        "400":
+          description: Invalid request body or ID format
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "403":
+          description: Forbidden - User does not own this conversation
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: Conversation not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Post a message and get a streaming response
+      tags:
+      - Chat
   /health:
     get:
       consumes:
@@ -349,6 +665,187 @@ paths:
       summary: Health check
       tags:
       - Health
+  /providers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all active LLM providers supported by the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Providers retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/trading-alchemist_internal_application_dto.ProviderResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: List available providers
+      tags:
+      - Providers
+  /providers/available-models:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all available models with their API key configuration
+        status in a single optimized call
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Available models retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/trading-alchemist_internal_application_dto.ProviderResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get available models with API key status
+      tags:
+      - Providers
+  /providers/settings:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all provider settings for the currently authenticated
+        user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User provider settings retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/trading-alchemist_internal_application_dto.UserProviderSettingResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: List user's provider settings
+      tags:
+      - Providers
+    post:
+      consumes:
+      - application/json
+      description: Creates or updates a provider setting (API key, base URL) for the
+        authenticated user.
+      parameters:
+      - description: Provider setting information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.UpsertUserProviderSettingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Provider setting saved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/trading-alchemist_internal_application_dto.UserProviderSettingResponse'
+              type: object
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: Provider not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Create or update a provider setting
+      tags:
+      - Providers
+  /tools:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all active tools that can be used by the LLM.
+        Can be filtered by provider.
+      parameters:
+      - description: Filter tools by a specific provider ID
+        in: query
+        name: provider_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tools retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/trading-alchemist_internal_application_dto.ToolResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get available tools
+      tags:
+      - Chat
   /users/profile:
     get:
       consumes:
