@@ -372,6 +372,71 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Archives a conversation for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Archive conversation",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation archived successfully",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid conversation ID format",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User does not own this conversation",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Conversation not found",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/conversations/{id}/messages": {
@@ -415,6 +480,82 @@ const docTemplate = `{
                         "description": "text/event-stream response",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or ID format",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User does not own this conversation",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Conversation not found",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/conversations/{id}/title": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Updates the title of a conversation for the authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Update conversation title",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Conversation ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Title update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UpdateConversationTitleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation title updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1198,6 +1339,19 @@ const docTemplate = `{
                 },
                 "schema": {
                     "$ref": "#/definitions/trading-alchemist_internal_application_dto.JSONB"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_dto.UpdateConversationTitleRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
                 }
             }
         },

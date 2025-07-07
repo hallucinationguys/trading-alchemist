@@ -28,6 +28,11 @@ UPDATE conversations
 SET last_message_at = $2
 WHERE id = $1;
 
+-- name: UpdateConversationTitle :exec
+UPDATE conversations
+SET title = $2
+WHERE id = $1;
+
 -- name: ArchiveConversation :exec
 UPDATE conversations
 SET is_archived = true

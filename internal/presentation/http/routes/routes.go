@@ -10,11 +10,11 @@ import (
 )
 
 // SetupRoutes configures all application routes
-func SetupRoutes(app *fiber.App, cfg *config.Config, authUseCase *usecases.AuthUseCase, userUseCase *usecases.UserUseCase, chatUseCase *usecases.ChatUseCase, providerUseCase *usecases.UserProviderSettingUseCase, modelAvailabilityUseCase *usecases.ModelAvailabilityUseCase) {
+func SetupRoutes(app *fiber.App, cfg *config.Config, authUseCase *usecases.AuthUseCase, userUseCase *usecases.UserUseCase, chatUseCase *usecases.ChatUseCase, conversationUseCase *usecases.ConversationUseCase, providerUseCase *usecases.UserProviderSettingUseCase, modelAvailabilityUseCase *usecases.ModelAvailabilityUseCase) {
 	// Create handlers
 	authHandler := handlers.NewAuthHandler(authUseCase)
 	userHandler := handlers.NewUserHandler(userUseCase, authUseCase)
-	chatHandler := handlers.NewChatHandler(chatUseCase)
+	chatHandler := handlers.NewChatHandler(chatUseCase, conversationUseCase)
 	providerHandler := handlers.NewProviderHandler(providerUseCase, modelAvailabilityUseCase)
 
 	// Create auth middleware
@@ -110,6 +110,8 @@ func setupV1ChatRoutes(v1 fiber.Router, chatHandler *handlers.ChatHandler, authM
 	conversations.Get("/", chatHandler.GetConversations)
 	conversations.Post("/", chatHandler.CreateConversation)
 	conversations.Get("/:id", chatHandler.GetConversation)
+	conversations.Put("/:id/title", chatHandler.UpdateConversationTitle)
+	conversations.Delete("/:id", chatHandler.ArchiveConversation)
 	conversations.Post("/:id/messages", chatHandler.PostMessage)
 
 	// Tool routes

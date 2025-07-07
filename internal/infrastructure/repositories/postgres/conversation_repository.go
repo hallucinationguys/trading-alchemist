@@ -120,6 +120,14 @@ func (r *ConversationRepository) UpdateLastMessageAt(ctx context.Context, id uui
 	return r.queries.UpdateConversationLastMessageAt(ctx, params)
 }
 
+func (r *ConversationRepository) UpdateTitle(ctx context.Context, id uuid.UUID, title string) error {
+	params := sqlc.UpdateConversationTitleParams{
+		ID:    pgtype.UUID{Bytes: id, Valid: true},
+		Title: title,
+	}
+	return r.queries.UpdateConversationTitle(ctx, params)
+}
+
 func (r *ConversationRepository) Archive(ctx context.Context, id uuid.UUID) error {
 	convUUID := pgtype.UUID{Bytes: id, Valid: true}
 	return r.queries.ArchiveConversation(ctx, convUUID)
@@ -156,7 +164,4 @@ func sqlcConversationToEntity(c *sqlc.Conversation) *entities.Conversation {
 	}
 
 	return conv
-}
-
-// TODO: Implement methods using sqlc generated queries.
-// e.g., Create, GetByID, GetByUserID, etc. 
+} 

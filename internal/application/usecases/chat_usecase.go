@@ -16,225 +16,35 @@ import (
 	"github.com/google/uuid"
 )
 
-// ChatUseCase handles the business logic for chat operations.
-type ChatUseCase struct {
-	dbService    *database.Service
-	config       *config.Config
-	llmService   services.LLMService
-	// Add other repositories as needed
+// Helper function for min operation
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
-// NewChatUseCase creates a new ChatUseCase.
+// ChatUseCase handles the business logic for chat operations.
+type ChatUseCase struct {
+	dbService           *database.Service
+	config              *config.Config
+	llmService          services.LLMService
+	conversationUseCase *ConversationUseCase
+}
+
+// NewChatUseCase creates a new ChatUseCase instance.
 func NewChatUseCase(
 	dbService *database.Service,
 	config *config.Config,
 	llmService services.LLMService,
+	conversationUseCase *ConversationUseCase,
 ) *ChatUseCase {
 	return &ChatUseCase{
-		dbService:    dbService,
-		config:       config,
-		llmService:   llmService,
+		dbService:           dbService,
+		config:              config,
+		llmService:          llmService,
+		conversationUseCase: conversationUseCase,
 	}
-}
-
-// CreateConversation creates a new chat conversation.
-func (uc *ChatUseCase) CreateConversation(ctx context.Context, req *dto.CreateConversationRequest) (*dto.ConversationDetailResponse, error) {
-	var createdConv *entities.Conversation
-
-	err := uc.dbService.ExecuteInTx(ctx, func(provider database.RepositoryProvider) error {
-		// For now, let's use a simpler approach - use a default model from config
-		// This will be enhanced later to handle user's configured models
-		var targetModel *entities.Model
-		var err error
-
-		if req.ModelName != nil && *req.ModelName != "" {
-			// Use the specific model requested
-			parts := strings.Split(*req.ModelName, "/")
-			if len(parts) != 2 {
-				return errors.NewAppError(errors.CodeValidation, fmt.Sprintf("Invalid model format: %s. Expected 'provider/model_name'", *req.ModelName), nil)
-			}
-			providerName, modelName := parts[0], parts[1]
-
-			// Find the provider
-			targetProvider, err := provider.Provider().GetByName(ctx, providerName)
-			if err != nil {
-				if err == errors.ErrProviderNotFound {
-					return errors.NewAppError(errors.CodeNotFound, fmt.Sprintf("Provider '%s' not found", providerName), err)
-				}
-				return fmt.Errorf("failed to find provider '%s': %w", providerName, err)
-			}
-
-			// Find the model within the provider
-			targetModel, err = provider.Model().GetModelByName(ctx, targetProvider.ID, modelName)
-			if err != nil {
-				if err == errors.ErrModelNotFound {
-					return errors.NewAppError(errors.CodeNotFound, fmt.Sprintf("Model '%s' not found for provider '%s'", modelName, providerName), err)
-				}
-				return fmt.Errorf("failed to find model '%s': %w", modelName, err)
-			}
-		} else {
-			// Use default model from config if no specific model requested
-			if uc.config.App.DefaultModel == "" {
-				return errors.NewAppError(errors.CodeConfiguration, "No model specified and no default model configured", nil)
-			}
-
-			parts := strings.Split(uc.config.App.DefaultModel, "/")
-			if len(parts) != 2 {
-				return errors.NewAppError(errors.CodeConfiguration, fmt.Sprintf("Invalid default model format in config: %s", uc.config.App.DefaultModel), nil)
-			}
-			providerName, modelName := parts[0], parts[1]
-
-			// Find the provider
-			targetProvider, err := provider.Provider().GetByName(ctx, providerName)
-			if err != nil {
-				return fmt.Errorf("failed to find default provider '%s': %w", providerName, err)
-			}
-
-			// Find the model within the provider
-			targetModel, err = provider.Model().GetModelByName(ctx, targetProvider.ID, modelName)
-			if err != nil {
-				return fmt.Errorf("failed to find default model '%s': %w", modelName, err)
-			}
-		}
-
-		// 2. Create Conversation
-		newConv := &entities.Conversation{
-			UserID:  req.UserID,
-			Title:   req.Title,
-			ModelID: targetModel.ID,
-		}
-		createdConv, err = provider.Conversation().Create(ctx, newConv)
-		if err != nil {
-			return fmt.Errorf("failed to create conversation: %w", err)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &dto.ConversationDetailResponse{
-		ID:      createdConv.ID,
-		Title:   createdConv.Title,
-		ModelID: createdConv.ModelID,
-	}, nil
-}
-
-// GetUserConversations retrieves a paginated list of conversations for a specific user.
-func (uc *ChatUseCase) GetUserConversations(ctx context.Context, userID uuid.UUID, limit, offset int) ([]*dto.ConversationSummaryResponse, error) {
-	var conversations []*entities.Conversation
-
-	err := uc.dbService.ExecuteInTx(ctx, func(provider database.RepositoryProvider) error {
-		var err error
-		conversations, err = provider.Conversation().GetByUserID(ctx, userID, limit, offset)
-		if err != nil {
-			return fmt.Errorf("failed to get user conversations: %w", err)
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert to DTOs
-	response := make([]*dto.ConversationSummaryResponse, len(conversations))
-	for i, conv := range conversations {
-		response[i] = &dto.ConversationSummaryResponse{
-			ID:            conv.ID,
-			Title:         conv.Title,
-			LastMessageAt: conv.LastMessageAt,
-			ModelID:       conv.ModelID,
-		}
-	}
-
-	return response, nil
-}
-
-// GetConversationDetails retrieves the full details of a single conversation, including its messages.
-func (uc *ChatUseCase) GetConversationDetails(ctx context.Context, conversationID, userID uuid.UUID) (*dto.ConversationDetailResponse, error) {
-	var conversation *entities.Conversation
-	var messages []*entities.Message
-	var artifactsMap map[uuid.UUID][]*entities.Artifact
-
-	err := uc.dbService.ExecuteInTx(ctx, func(provider database.RepositoryProvider) error {
-		var err error
-		conversation, err = provider.Conversation().GetByID(ctx, conversationID)
-		if err != nil {
-			return fmt.Errorf("failed to get conversation: %w", err)
-		}
-
-		// Security check: ensure the user owns the conversation
-		if conversation.UserID != userID {
-			return errors.ErrForbidden
-		}
-
-		// For simplicity, we'll fetch the last 100 messages.
-		// In a real app, this should be paginated.
-		messages, err = provider.Message().GetByConversationID(ctx, conversationID, 100, 0)
-		if err != nil {
-			return fmt.Errorf("failed to get messages: %w", err)
-		}
-
-		// Fetch artifacts for all messages in one go
-		artifactsMap = make(map[uuid.UUID][]*entities.Artifact)
-		for _, msg := range messages {
-			artifacts, err := provider.Artifact().GetByMessageID(ctx, msg.ID)
-			if err != nil {
-				// We can decide to either fail the whole request or just log the error
-				// For now, let's fail, but in a real app, logging might be better.
-				return fmt.Errorf("failed to get artifacts for message %s: %w", msg.ID, err)
-			}
-			if len(artifacts) > 0 {
-				artifactsMap[msg.ID] = artifacts
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert messages to DTOs
-	messageDTOs := make([]dto.MessageResponse, len(messages))
-	for i, msg := range messages {
-		messageDTOs[i] = dto.MessageResponse{
-			ID:        msg.ID,
-			Role:      string(msg.Role),
-			Content:   msg.Content,
-			CreatedAt: msg.CreatedAt,
-			Artifacts: toArtifactResponses(artifactsMap[msg.ID]),
-		}
-	}
-
-	return &dto.ConversationDetailResponse{
-		ID:           conversation.ID,
-		Title:        conversation.Title,
-		ModelID:      conversation.ModelID,
-		SystemPrompt: conversation.SystemPrompt,
-		Messages:     messageDTOs,
-	}, nil
-}
-
-func toArtifactResponses(artifacts []*entities.Artifact) []dto.ArtifactResponse {
-	if artifacts == nil {
-		return nil
-	}
-	responses := make([]dto.ArtifactResponse, len(artifacts))
-	for i, a := range artifacts {
-		responses[i] = dto.ArtifactResponse{
-			ID:       a.ID,
-			Title:    a.Title,
-			Type:     string(a.Type),
-			Language: a.Language,
-			Content:  a.Content,
-		}
-	}
-	return responses
 }
 
 // PostMessage adds a new message to a conversation and starts a streaming LLM response.
@@ -396,8 +206,6 @@ func (uc *ChatUseCase) processLLMStream(ctx context.Context, llmProvider *entiti
 	
 	log.Printf("LLM stream finished for conversation %s. Full response: %s", conversationID, responseContent.String())
 	
-	// TODO: Handle tool calls from a final event if needed
-
 	// Save the assistant's message
 	assistantMessage := &entities.Message{
 		ID:             uuid.New(), // Generate ID upfront to potentially send it with the stream
@@ -406,6 +214,8 @@ func (uc *ChatUseCase) processLLMStream(ctx context.Context, llmProvider *entiti
 		Content:        responseContent.String(),
 	}
 
+	var shouldGenerateTitle bool
+	var userMessage string
 	err = uc.dbService.ExecuteInTx(ctx, func(provider database.RepositoryProvider) error {
 		createdMsg, err := provider.Message().Create(ctx, assistantMessage)
 		if err != nil {
@@ -416,11 +226,51 @@ func (uc *ChatUseCase) processLLMStream(ctx context.Context, llmProvider *entiti
 			// Log this error but don't fail the whole operation, as the message is already saved.
 			log.Printf("Failed to update conversation timestamp after assistant message for conversation %s: %v", conversationID, err)
 		}
+		
+		// Check if we should generate a title (first exchange complete)
+		log.Printf("Checking if should generate title for conversation %s", conversationID)
+		shouldGenerate, err := uc.conversationUseCase.CheckShouldGenerateTitleWithProvider(provider, ctx, conversationID)
+		if err != nil {
+			log.Printf("Failed to check if should generate title for conversation %s: %v", conversationID, err)
+			return nil
+		}
+		
+		log.Printf("Should generate title for conversation %s: %v", conversationID, shouldGenerate)
+		shouldGenerateTitle = shouldGenerate
+		if shouldGenerate {
+			log.Printf("First exchange complete for conversation %s, will generate title", conversationID)
+			// Get the conversation messages - since we just added the assistant message, 
+			// the conversation now has 2 messages total (user + assistant)
+			allMessages, err := provider.Message().GetByConversationID(ctx, conversationID, 10, 0)
+			if err != nil {
+				log.Printf("Failed to get messages for title generation: %v", err)
+				return nil
+			}
+			log.Printf("Retrieved %d messages for title generation", len(allMessages))
+			// Find the user message (should be the first one chronologically)
+			for _, msg := range allMessages {
+				if msg.Role == entities.MessageRoleUser {
+					userMessage = msg.Content
+					log.Printf("Found user message for title generation: %s", userMessage[:min(50, len(userMessage))])
+					break
+				}
+			}
+			if userMessage == "" {
+				log.Printf("No user message found for title generation")
+			}
+		}
+		
 		return nil
 	})
 
 	if err != nil {
 		log.Printf("Failed to save assistant's response for conversation %s: %v", conversationID, err)
+	} else if shouldGenerateTitle && userMessage != "" {
+		log.Printf("Triggering title generation for conversation %s", conversationID)
+		// Trigger title generation asynchronously
+		uc.conversationUseCase.GenerateConversationTitle(ctx, conversationID, userMessage, responseContent.String())
+	} else {
+		log.Printf("Not triggering title generation - shouldGenerateTitle: %v, userMessage empty: %v", shouldGenerateTitle, userMessage == "")
 	}
 }
 
@@ -454,7 +304,5 @@ func (uc *ChatUseCase) GetAvailableTools(ctx context.Context, providerID *uuid.U
 	return response, nil
 }
 
-// TODO: Implement methods like:
-// - GetUserConversations(ctx context.Context, userID uuid.UUID) ([]*dto.ConversationSummaryResponse, error)
-// - GetConversationDetails(ctx context.Context, conversationID uuid.UUID) (*dto.ConversationDetailResponse, error)
-// - PostMessage(ctx context.Context, conversationID uuid.UUID, req *dto.PostMessageRequest) (*dto.MessageResponse, error) 
+// Note: Conversation CRUD operations have been moved to ConversationUseCase.
+// This ChatUseCase now focuses on messaging and streaming functionality. 

@@ -17,13 +17,15 @@ import (
 
 // ChatHandler handles chat-related requests.
 type ChatHandler struct {
-	chatUseCase *usecases.ChatUseCase
+	chatUseCase         *usecases.ChatUseCase
+	conversationUseCase *usecases.ConversationUseCase
 }
 
 // NewChatHandler creates a new ChatHandler.
-func NewChatHandler(chatUseCase *usecases.ChatUseCase) *ChatHandler {
+func NewChatHandler(chatUseCase *usecases.ChatUseCase, conversationUseCase *usecases.ConversationUseCase) *ChatHandler {
 	return &ChatHandler{
-		chatUseCase: chatUseCase,
+		chatUseCase:         chatUseCase,
+		conversationUseCase: conversationUseCase,
 	}
 }
 
@@ -58,8 +60,8 @@ func (h *ChatHandler) CreateConversation(c *fiber.Ctx) error {
 	}
 	req.UserID = userID
 
-	// Call use case
-	conversation, err := h.chatUseCase.CreateConversation(c.Context(), &req)
+	// Call conversation use case
+	conversation, err := h.conversationUseCase.CreateConversation(c.Context(), &req)
 	if err != nil {
 		return responses.HandleError(c, err)
 	}
@@ -96,8 +98,8 @@ func (h *ChatHandler) GetConversations(c *fiber.Ctx) error {
 	limit := c.QueryInt("limit", 20)
 	offset := c.QueryInt("offset", 0)
 
-	// Call use case
-	conversations, err := h.chatUseCase.GetUserConversations(c.Context(), userID, limit, offset)
+	// Call conversation use case
+	conversations, err := h.conversationUseCase.GetUserConversations(c.Context(), userID, limit, offset)
 	if err != nil {
 		return responses.HandleError(c, err)
 	}
@@ -138,8 +140,8 @@ func (h *ChatHandler) GetConversation(c *fiber.Ctx) error {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid conversation ID format")
 	}
 
-	// Call use case
-	conversation, err := h.chatUseCase.GetConversationDetails(c.Context(), conversationID, userID)
+	// Call conversation use case
+	conversation, err := h.conversationUseCase.GetConversationDetails(c.Context(), conversationID, userID)
 	if err != nil {
 		return responses.HandleError(c, err)
 	}
@@ -255,6 +257,96 @@ func (h *ChatHandler) GetAvailableTools(c *fiber.Ctx) error {
 	}
 
 	return responses.SendSuccess(c, tools)
+}
+
+// UpdateConversationTitle updates the title of a conversation.
+// @Summary Update conversation title
+// @Description Updates the title of a conversation for the authenticated user.
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Conversation ID"
+// @Param request body dto.UpdateConversationTitleRequest true "Title update request"
+// @Success 200 {object} responses.SuccessResponse "Conversation title updated successfully"
+// @Failure 400 {object} responses.ErrorResponse "Invalid request body or ID format"
+// @Failure 401 {object} responses.ErrorResponse "Unauthorized"
+// @Failure 403 {object} responses.ErrorResponse "Forbidden - User does not own this conversation"
+// @Failure 404 {object} responses.ErrorResponse "Conversation not found"
+// @Failure 500 {object} responses.ErrorResponse "Internal server error"
+// @Router /conversations/{id}/title [put]
+func (h *ChatHandler) UpdateConversationTitle(c *fiber.Ctx) error {
+	var req dto.UpdateConversationTitleRequest
+	if err := c.BodyParser(&req); err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
+	}
+
+	// Extract user from context
+	userClaims, ok := c.Locals("user").(*utils.Claims)
+	if !ok || userClaims == nil {
+		return responses.SendError(c, fiber.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+	}
+
+	userID, err := uuid.Parse(userClaims.Subject)
+	if err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid user ID format in token")
+	}
+
+	// Get conversation ID from URL
+	conversationID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid conversation ID format")
+	}
+
+	// Call conversation use case
+	err = h.conversationUseCase.UpdateConversationTitle(c.Context(), conversationID, userID, &req)
+	if err != nil {
+		return responses.HandleError(c, err)
+	}
+
+	return responses.SendSuccess(c, nil)
+}
+
+// ArchiveConversation archives (soft deletes) a conversation.
+// @Summary Archive conversation
+// @Description Archives a conversation for the authenticated user.
+// @Tags Chat
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "Conversation ID"
+// @Success 200 {object} responses.SuccessResponse "Conversation archived successfully"
+// @Failure 400 {object} responses.ErrorResponse "Invalid conversation ID format"
+// @Failure 401 {object} responses.ErrorResponse "Unauthorized"
+// @Failure 403 {object} responses.ErrorResponse "Forbidden - User does not own this conversation"
+// @Failure 404 {object} responses.ErrorResponse "Conversation not found"
+// @Failure 500 {object} responses.ErrorResponse "Internal server error"
+// @Router /conversations/{id} [delete]
+func (h *ChatHandler) ArchiveConversation(c *fiber.Ctx) error {
+	// Extract user from context
+	userClaims, ok := c.Locals("user").(*utils.Claims)
+	if !ok || userClaims == nil {
+		return responses.SendError(c, fiber.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+	}
+
+	userID, err := uuid.Parse(userClaims.Subject)
+	if err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid user ID format in token")
+	}
+
+	// Get conversation ID from URL
+	conversationID, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid conversation ID format")
+	}
+
+	// Call conversation use case
+	err = h.conversationUseCase.ArchiveConversation(c.Context(), conversationID, userID)
+	if err != nil {
+		return responses.HandleError(c, err)
+	}
+
+	return responses.SendSuccess(c, nil)
 }
 
 // TODO: Implement handler methods:

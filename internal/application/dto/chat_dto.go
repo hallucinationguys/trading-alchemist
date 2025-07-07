@@ -15,6 +15,17 @@ type CreateConversationRequest struct {
 	UserID    uuid.UUID `json:"-"`                    // This will be set from the context, not the request body.
 }
 
+// UpdateConversationTitleRequest represents the request to update a conversation's title.
+type UpdateConversationTitleRequest struct {
+	Title string `json:"title" validate:"required,min=1,max=255"`
+}
+
+// GenerateTitleRequest represents internal request to generate conversation title.
+type GenerateTitleRequest struct {
+	UserMessage      string `json:"user_message"`
+	AssistantMessage string `json:"assistant_message"`
+}
+
 // PostMessageRequest represents the request to post a new message to a conversation.
 type PostMessageRequest struct {
 	Content   string                  `json:"content" validate:"required"`

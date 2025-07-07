@@ -13,6 +13,10 @@ WHERE conversation_id = $1
 ORDER BY created_at ASC
 LIMIT $2 OFFSET $3;
 
+-- name: CountMessagesByConversationID :one
+SELECT COUNT(*) FROM messages
+WHERE conversation_id = $1;
+
 -- name: GetMessagesByConversationIDWithCursor :many
 SELECT id, conversation_id, parent_id, role, content, model_id, token_count, cost, metadata, created_at, updated_at FROM messages
 WHERE conversation_id = $1 AND created_at < $2

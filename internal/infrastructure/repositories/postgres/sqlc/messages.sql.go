@@ -11,6 +11,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countMessagesByConversationID = `-- name: CountMessagesByConversationID :one
+SELECT COUNT(*) FROM messages
+WHERE conversation_id = $1
+`
+
+func (q *Queries) CountMessagesByConversationID(ctx context.Context, conversationID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countMessagesByConversationID, conversationID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (conversation_id, parent_id, role, content, model_id, token_count, cost, metadata)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

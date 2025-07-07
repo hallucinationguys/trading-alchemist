@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	ArchiveConversation(ctx context.Context, id pgtype.UUID) error
 	CleanupExpiredMagicLinks(ctx context.Context) error
+	CountMessagesByConversationID(ctx context.Context, conversationID pgtype.UUID) (int64, error)
 	CreateArtifact(ctx context.Context, arg CreateArtifactParams) (Artifact, error)
 	CreateConversation(ctx context.Context, arg CreateConversationParams) (Conversation, error)
 	CreateMagicLink(ctx context.Context, arg CreateMagicLinkParams) (MagicLink, error)
@@ -62,6 +63,7 @@ type Querier interface {
 	UpdateArtifact(ctx context.Context, arg UpdateArtifactParams) (Artifact, error)
 	UpdateConversation(ctx context.Context, arg UpdateConversationParams) (Conversation, error)
 	UpdateConversationLastMessageAt(ctx context.Context, arg UpdateConversationLastMessageAtParams) error
+	UpdateConversationTitle(ctx context.Context, arg UpdateConversationTitleParams) error
 	UpdateMessage(ctx context.Context, arg UpdateMessageParams) (Message, error)
 	UpdateModel(ctx context.Context, arg UpdateModelParams) (Model, error)
 	UpdateProvider(ctx context.Context, arg UpdateProviderParams) (Provider, error)

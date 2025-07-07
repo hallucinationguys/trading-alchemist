@@ -17,4 +17,6 @@ type MessageRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	// For large conversations - get paginated with cursor
 	GetByConversationIDWithCursor(ctx context.Context, conversationID uuid.UUID, cursor *time.Time, limit int) ([]*entities.Message, error)
+	// Count messages in a conversation for title generation
+	CountByConversationID(ctx context.Context, conversationID uuid.UUID) (int, error)
 } 

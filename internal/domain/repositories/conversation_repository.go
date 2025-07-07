@@ -14,5 +14,6 @@ type ConversationRepository interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]*entities.Conversation, error)
 	Update(ctx context.Context, conversation *entities.Conversation) (*entities.Conversation, error)
 	UpdateLastMessageAt(ctx context.Context, id uuid.UUID, lastMessageAt time.Time) error
+	UpdateTitle(ctx context.Context, id uuid.UUID, title string) error
 	Archive(ctx context.Context, id uuid.UUID) error
 } 

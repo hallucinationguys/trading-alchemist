@@ -50,7 +50,8 @@ func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo r
 
 	// Create use cases
 	userUseCase := usecases.NewUserUseCase(userRepo)
-	chatUseCase := usecases.NewChatUseCase(dbService, cfg, llmService)
+	conversationUseCase := usecases.NewConversationUseCase(dbService, cfg, llmService)
+	chatUseCase := usecases.NewChatUseCase(dbService, cfg, llmService, conversationUseCase)
 	providerUseCase := usecases.NewUserProviderSettingUseCase(dbService, cfg)
 	
 	// Create API key service and model availability use case
@@ -66,7 +67,7 @@ func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo r
 	}
 
 	// Setup all routes with use cases
-	routes.SetupRoutes(app, cfg, authUseCase, userUseCase, chatUseCase, providerUseCase, modelAvailabilityUseCase)
+	routes.SetupRoutes(app, cfg, authUseCase, userUseCase, chatUseCase, conversationUseCase, providerUseCase, modelAvailabilityUseCase)
 
 	return &Server{
 		app:    app,

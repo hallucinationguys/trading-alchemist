@@ -193,6 +193,15 @@ definitions:
       schema:
         $ref: '#/definitions/trading-alchemist_internal_application_dto.JSONB'
     type: object
+  trading-alchemist_internal_application_dto.UpdateConversationTitleRequest:
+    properties:
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
   trading-alchemist_internal_application_dto.UpdateUserRequest:
     properties:
       avatar_url:
@@ -542,6 +551,48 @@ paths:
       tags:
       - Chat
   /conversations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Archives a conversation for the authenticated user.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Conversation archived successfully
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+        "400":
+          description: Invalid conversation ID format
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "403":
+          description: Forbidden - User does not own this conversation
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: Conversation not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Archive conversation
+      tags:
+      - Chat
     get:
       consumes:
       - application/json
@@ -638,6 +689,55 @@ paths:
       security:
       - Bearer: []
       summary: Post a message and get a streaming response
+      tags:
+      - Chat
+  /conversations/{id}/title:
+    put:
+      consumes:
+      - application/json
+      description: Updates the title of a conversation for the authenticated user.
+      parameters:
+      - description: Conversation ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Title update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/trading-alchemist_internal_application_dto.UpdateConversationTitleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Conversation title updated successfully
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.SuccessResponse'
+        "400":
+          description: Invalid request body or ID format
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "403":
+          description: Forbidden - User does not own this conversation
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "404":
+          description: Conversation not found
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/trading-alchemist_internal_presentation_responses.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Update conversation title
       tags:
       - Chat
   /health:

@@ -173,6 +173,15 @@ func (r *MessageRepository) GetByConversationIDWithCursor(ctx context.Context, c
 	return messages, nil
 }
 
+func (r *MessageRepository) CountByConversationID(ctx context.Context, conversationID uuid.UUID) (int, error) {
+	convUUID := pgtype.UUID{Bytes: conversationID, Valid: true}
+	count, err := r.queries.CountMessagesByConversationID(ctx, convUUID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count messages by conversation ID: %w", err)
+	}
+	return int(count), nil
+}
+
 func sqlcMessageToEntity(m *sqlc.Message) *entities.Message {
 	msg := &entities.Message{
 		Role:      entities.MessageRole(m.Role),
@@ -212,6 +221,4 @@ func sqlcMessageToEntity(m *sqlc.Message) *entities.Message {
 		}
 	}
 	return msg
-}
-
-// TODO: Implement methods using sqlc generated queries. 
+} 
