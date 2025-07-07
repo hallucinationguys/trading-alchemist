@@ -22,31 +22,32 @@ type ModelSeed struct {
 	SupportsVision bool
 	IsActive       bool
 }
+
 var seeds = []ProviderSeed{
 	{
-	  Name:        "openai",
-	  DisplayName: "OpenAI",
-	  Models: []ModelSeed{
-		{Name: "gpt-4", DisplayName: "GPT-4", SupportsVision: true, IsActive: true},
-		{Name: "gpt-4-turbo", DisplayName: "GPT-4 Turbo", SupportsVision: true, IsActive: true},
-		{Name: "gpt-4o", DisplayName: "GPT-4o", SupportsVision: true, IsActive: true},
-		{Name: "gpt-4o-mini", DisplayName: "GPT-4o Mini", SupportsVision: true, IsActive: true},
-		{Name: "gpt-3.5-turbo", DisplayName: "GPT-3.5 Turbo", SupportsVision: false, IsActive: true},
-		{Name: "o1-preview", DisplayName: "o1-preview", SupportsVision: false, IsActive: true},
-		{Name: "o1-mini", DisplayName: "o1-mini", SupportsVision: false, IsActive: true},
-	  },
+		Name:        "openai",
+		DisplayName: "OpenAI",
+		Models: []ModelSeed{
+			{Name: "gpt-4o", DisplayName: "GPT-4o", SupportsVision: true, IsActive: true},
+			{Name: "gpt-4o-mini", DisplayName: "GPT-4o Mini", SupportsVision: true, IsActive: true},
+			{Name: "gpt-4.1", DisplayName: "GPT-4.1", SupportsVision: true, IsActive: true}, // Assuming GPT-4.1 supports vision based on sources
+			{Name: "gpt-4.1-mini", DisplayName: "GPT-4.1 Mini", SupportsVision: true, IsActive: true},
+			{Name: "o3", DisplayName: "OpenAI o3", SupportsVision: true, IsActive: true},
+			{Name: "o3-pro", DisplayName: "OpenAI o3-pro", SupportsVision: true, IsActive: true},
+			{Name: "o4-mini", DisplayName: "OpenAI o4-mini", SupportsVision: true, IsActive: true},
+		},
 	},
 	{
-	  Name:        "google",
-	  DisplayName: "Google",
-	  Models: []ModelSeed{
-		{Name: "gemini-1.5-pro", DisplayName: "Gemini 1.5 Pro", SupportsVision: true, IsActive: true},
-		{Name: "gemini-1.5-flash", DisplayName: "Gemini 1.5 Flash", SupportsVision: true, IsActive: true},
-		{Name: "gemini-1.5-flash-8b", DisplayName: "Gemini 1.5 Flash-8B", SupportsVision: true, IsActive: true},
-		{Name: "gemini-2.0-flash-exp", DisplayName: "Gemini 2.0 Flash (Experimental)", SupportsVision: true, IsActive: true},
-	  },
+		Name:        "google",
+		DisplayName: "Google",
+		Models: []ModelSeed{
+			{Name: "gemini-2.5-pro", DisplayName: "Gemini 2.5 Pro", SupportsVision: true, IsActive: true},
+			{Name: "gemini-2.5-flash", DisplayName: "Gemini 2.5 Flash", SupportsVision: true, IsActive: true},
+			{Name: "gemini-2.5-flash-lite", DisplayName: "Gemini 2.5 Flash-Lite", SupportsVision: true, IsActive: true},
+		},
 	},
-  }
+}
+
 func Seed(dbService *database.Service) {
 	log.Println("Seeding providers and models...")
 
@@ -89,11 +90,11 @@ func Seed(dbService *database.Service) {
 				}
 
 				newModel := &entities.Model{
-					ProviderID:      providerID,
-					Name:            mSeed.Name,
-					DisplayName:     mSeed.DisplayName,
-					SupportsVision:  mSeed.SupportsVision,
-					IsActive:        mSeed.IsActive,
+					ProviderID:     providerID,
+					Name:           mSeed.Name,
+					DisplayName:    mSeed.DisplayName,
+					SupportsVision: mSeed.SupportsVision,
+					IsActive:       mSeed.IsActive,
 				}
 				_, err = modelRepo.CreateModel(context.Background(), newModel)
 				if err != nil {
@@ -110,4 +111,4 @@ func Seed(dbService *database.Service) {
 	}
 
 	log.Println("Seeding completed.")
-} 
+}
