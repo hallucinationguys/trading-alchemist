@@ -2,8 +2,7 @@ package handlers
 
 import (
 	"log"
-	"trading-alchemist/internal/application/dto"
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/chat"
 	"trading-alchemist/internal/presentation/responses"
 	"trading-alchemist/pkg/utils"
 
@@ -13,14 +12,14 @@ import (
 
 // ProviderHandler handles provider-related and user-provider-setting-related requests.
 type ProviderHandler struct {
-	providerUseCase           *usecases.UserProviderSettingUseCase
-	modelAvailabilityUseCase  *usecases.ModelAvailabilityUseCase
+	providerUseCase           *chat.UserProviderSettingUseCase
+	modelAvailabilityUseCase  *chat.ModelAvailabilityUseCase
 }
 
 // NewProviderHandler creates a new ProviderHandler.
 func NewProviderHandler(
-	providerUseCase *usecases.UserProviderSettingUseCase,
-	modelAvailabilityUseCase *usecases.ModelAvailabilityUseCase,
+	providerUseCase *chat.UserProviderSettingUseCase,
+	modelAvailabilityUseCase *chat.ModelAvailabilityUseCase,
 ) *ProviderHandler {
 	return &ProviderHandler{
 		providerUseCase:          providerUseCase,
@@ -35,7 +34,7 @@ func NewProviderHandler(
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} responses.SuccessResponse{data=[]dto.ProviderResponse} "Providers retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=[]chat.ProviderResponse} "Providers retrieved successfully"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /providers [get]
@@ -54,7 +53,7 @@ func (h *ProviderHandler) ListProviders(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} responses.SuccessResponse{data=[]dto.UserProviderSettingResponse} "User provider settings retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=[]chat.UserProviderSettingResponse} "User provider settings retrieved successfully"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /providers/settings [get]
@@ -79,15 +78,15 @@ func (h *ProviderHandler) ListUserSettings(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param request body dto.UpsertUserProviderSettingRequest true "Provider setting information"
-// @Success 200 {object} responses.SuccessResponse{data=dto.UserProviderSettingResponse} "Provider setting saved successfully"
+// @Param request body chat.UpsertUserProviderSettingRequest true "Provider setting information"
+// @Success 200 {object} responses.SuccessResponse{data=chat.UserProviderSettingResponse} "Provider setting saved successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid request body or validation error"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 404 {object} responses.ErrorResponse "Provider not found"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /providers/settings [post]
 func (h *ProviderHandler) UpsertUserSetting(c *fiber.Ctx) error {
-	var req dto.UpsertUserProviderSettingRequest
+	var req chat.UpsertUserProviderSettingRequest
 	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Failed to parse request body: %v", err)
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
@@ -128,7 +127,7 @@ func (h *ProviderHandler) UpsertUserSetting(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} responses.SuccessResponse{data=[]dto.ProviderResponse} "Available models retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=[]chat.ProviderResponse} "Available models retrieved successfully"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /providers/available-models [get]

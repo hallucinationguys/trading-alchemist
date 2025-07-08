@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"trading-alchemist/internal/domain/repositories"
-	"trading-alchemist/internal/infrastructure/repositories/postgres"
+	"trading-alchemist/internal/domain/auth"
+	"trading-alchemist/internal/domain/chat"
+	authRepo "trading-alchemist/internal/infrastructure/repositories/postgres/auth"
+	chatRepo "trading-alchemist/internal/infrastructure/repositories/postgres/chat"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -23,15 +25,15 @@ type DBTX interface {
 // RepositoryProvider defines the interface for accessing all repositories.
 // This allows use cases to depend on this interface for transactional database operations.
 type RepositoryProvider interface {
-	User() repositories.UserRepository
-	MagicLink() repositories.MagicLinkRepository
-	Provider() repositories.ProviderRepository
-	UserProviderSetting() repositories.UserProviderSettingRepository
-	Conversation() repositories.ConversationRepository
-	Message() repositories.MessageRepository
-	Artifact() repositories.ArtifactRepository
-	Tool() repositories.ToolRepository
-	Model() repositories.ModelRepository
+	User() auth.UserRepository
+	MagicLink() auth.MagicLinkRepository
+	Provider() chat.ProviderRepository
+	UserProviderSetting() chat.UserProviderSettingRepository
+	Conversation() chat.ConversationRepository
+	Message() chat.MessageRepository
+	Artifact() chat.ArtifactRepository
+	Tool() chat.ToolRepository
+	Model() chat.ModelRepository
 }
 
 // transactionalRepositoryProvider provides repositories that are bound to a specific database transaction.
@@ -44,40 +46,40 @@ func NewTransactionalRepositoryProvider(tx DBTX) RepositoryProvider {
 	return &transactionalRepositoryProvider{tx: tx}
 }
 
-func (p *transactionalRepositoryProvider) User() repositories.UserRepository {
-	return postgres.NewUserRepository(p.tx)
+func (p *transactionalRepositoryProvider) User() auth.UserRepository {
+	return authRepo.NewUserRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) MagicLink() repositories.MagicLinkRepository {
-	return postgres.NewMagicLinkRepository(p.tx)
+func (p *transactionalRepositoryProvider) MagicLink() auth.MagicLinkRepository {
+	return authRepo.NewMagicLinkRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) Conversation() repositories.ConversationRepository {
-	return postgres.NewConversationRepository(p.tx)
+func (p *transactionalRepositoryProvider) Conversation() chat.ConversationRepository {
+	return chatRepo.NewConversationRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) Message() repositories.MessageRepository {
-	return postgres.NewMessageRepository(p.tx)
+func (p *transactionalRepositoryProvider) Message() chat.MessageRepository {
+	return chatRepo.NewMessageRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) Artifact() repositories.ArtifactRepository {
-	return postgres.NewArtifactRepository(p.tx)
+func (p *transactionalRepositoryProvider) Artifact() chat.ArtifactRepository {
+	return chatRepo.NewArtifactRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) Provider() repositories.ProviderRepository {
-	return postgres.NewProviderRepository(p.tx)
+func (p *transactionalRepositoryProvider) Provider() chat.ProviderRepository {
+	return chatRepo.NewProviderRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) Tool() repositories.ToolRepository {
-	return postgres.NewToolRepository(p.tx)
+func (p *transactionalRepositoryProvider) Tool() chat.ToolRepository {
+	return chatRepo.NewToolRepository(p.tx)
 }
 
-func (p *transactionalRepositoryProvider) UserProviderSetting() repositories.UserProviderSettingRepository {
-	return postgres.NewUserProviderSettingRepository(p.tx)
+func (p *transactionalRepositoryProvider) UserProviderSetting() chat.UserProviderSettingRepository {
+	return chatRepo.NewUserProviderSettingRepository(p.tx)
 }
 
-func (trp *transactionalRepositoryProvider) Model() repositories.ModelRepository {
-	return postgres.NewModelRepository(trp.tx)
+func (trp *transactionalRepositoryProvider) Model() chat.ModelRepository {
+	return chatRepo.NewModelRepository(trp.tx)
 }
 
 // Service provides a high-level abstraction for database operations,

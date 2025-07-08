@@ -3,8 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
-	"trading-alchemist/internal/domain/entities"
-	"trading-alchemist/internal/domain/repositories"
+	"trading-alchemist/internal/domain/chat"
 	"trading-alchemist/internal/domain/services"
 	"trading-alchemist/pkg/errors"
 
@@ -13,11 +12,11 @@ import (
 
 // APIKeyServiceImpl implements the APIKeyService interface
 type APIKeyServiceImpl struct {
-	userProviderRepo repositories.UserProviderSettingRepository
+	userProviderRepo chat.UserProviderSettingRepository
 }
 
 // NewAPIKeyService creates a new API key service
-func NewAPIKeyService(userProviderRepo repositories.UserProviderSettingRepository) services.APIKeyService {
+func NewAPIKeyService(userProviderRepo chat.UserProviderSettingRepository) services.APIKeyService {
 	return &APIKeyServiceImpl{
 		userProviderRepo: userProviderRepo,
 	}
@@ -42,7 +41,7 @@ func (s *APIKeyServiceImpl) IsProviderConfigured(ctx context.Context, userID, pr
 }
 
 // GetUserProviderConfig returns the configuration for a user-provider combination
-func (s *APIKeyServiceImpl) GetUserProviderConfig(ctx context.Context, userID, providerID uuid.UUID) (*entities.UserProviderSetting, error) {
+func (s *APIKeyServiceImpl) GetUserProviderConfig(ctx context.Context, userID, providerID uuid.UUID) (*chat.UserProviderSetting, error) {
 	setting, err := s.userProviderRepo.GetByUserIDAndProviderID(ctx, userID, providerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get provider configuration: %w", err)

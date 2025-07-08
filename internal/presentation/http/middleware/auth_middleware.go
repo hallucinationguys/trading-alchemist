@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"strings"
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/auth"
 	"trading-alchemist/internal/presentation/responses"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewAuthMiddleware(authUseCase *usecases.AuthUseCase) fiber.Handler {
+func NewAuthMiddleware(authUseCase *auth.AuthUseCase) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {

@@ -3,7 +3,7 @@ package seeder
 import (
 	"context"
 	"log"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/chat"
 	"trading-alchemist/internal/infrastructure/database"
 	"trading-alchemist/pkg/errors"
 
@@ -66,7 +66,7 @@ func Seed(dbService *database.Service) {
 				providerID = existingProvider.ID
 				log.Printf("Provider '%s' already exists.", pSeed.DisplayName)
 			} else {
-				newProvider := &entities.Provider{
+				newProvider := &chat.Provider{
 					Name:        pSeed.Name,
 					DisplayName: pSeed.DisplayName,
 					IsActive:    true,
@@ -89,7 +89,7 @@ func Seed(dbService *database.Service) {
 					continue
 				}
 
-				newModel := &entities.Model{
+				newModel := &chat.Model{
 					ProviderID:     providerID,
 					Name:           mSeed.Name,
 					DisplayName:    mSeed.DisplayName,

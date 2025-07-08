@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"trading-alchemist/internal/config"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/auth"
 	"trading-alchemist/internal/domain/services"
 
 	"github.com/resend/resend-go/v2"
@@ -23,19 +23,19 @@ func NewResendProvider(cfg *config.Config) services.EmailService {
 	}
 }
 // SendMagicLinkEmail sends a magic link email to the user using Resend
-func (r *ResendProvider) SendMagicLinkEmail(ctx context.Context, user *entities.User, magicLink *entities.MagicLink) error {
+func (r *ResendProvider) SendMagicLinkEmail(ctx context.Context, user *auth.User, magicLink *auth.MagicLink) error {
 	subject := "Your Magic Link to " + r.config.App.Name
 	html := r.buildMagicLinkEmailBody(user, magicLink)
 	return r.sendEmail(ctx, user.Email, subject, html)
 }
 // SendWelcomeEmail sends a welcome email to new users using Resend
-func (r *ResendProvider) SendWelcomeEmail(ctx context.Context, user *entities.User) error {
+func (r *ResendProvider) SendWelcomeEmail(ctx context.Context, user *auth.User) error {
 	subject := fmt.Sprintf("Welcome to %s!", r.config.App.Name)
 	html := r.buildWelcomeEmailBody(user)
 	return r.sendEmail(ctx, user.Email, subject, html)
 }
 // SendEmailVerificationEmail sends an email verification email using Resend
-func (r *ResendProvider) SendEmailVerificationEmail(ctx context.Context, user *entities.User, magicLink *entities.MagicLink) error {
+func (r *ResendProvider) SendEmailVerificationEmail(ctx context.Context, user *auth.User, magicLink *auth.MagicLink) error {
 	subject := "Verify Your Email Address for " + r.config.App.Name
 	html := r.buildEmailVerificationBody(user, magicLink)
 	return r.sendEmail(ctx, user.Email, subject, html)
@@ -60,7 +60,7 @@ func (r *ResendProvider) sendEmail(ctx context.Context, to, subject, html string
 	return nil
 }
 // buildMagicLinkEmailBody builds the magic link email body
-func (r *ResendProvider) buildMagicLinkEmailBody(user *entities.User, magicLink *entities.MagicLink) string {
+func (r *ResendProvider) buildMagicLinkEmailBody(user *auth.User, magicLink *auth.MagicLink) string {
 	magicLinkURL := fmt.Sprintf("%s/auth/verify?token=%s", r.config.App.FrontendBaseURL, magicLink.Token)
 	
 	return fmt.Sprintf(`
@@ -191,7 +191,7 @@ func (r *ResendProvider) buildMagicLinkEmailBody(user *entities.User, magicLink 
 	`, r.config.App.Name, user.DisplayName(), magicLinkURL, magicLinkURL, r.config.App.Name)
 }
 // buildWelcomeEmailBody builds the welcome email body
-func (r *ResendProvider) buildWelcomeEmailBody(user *entities.User) string {
+func (r *ResendProvider) buildWelcomeEmailBody(user *auth.User) string {
 	return fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
@@ -277,10 +277,10 @@ func (r *ResendProvider) buildWelcomeEmailBody(user *entities.User) string {
     </div>
 </body>
 </html>
-	`, r.config.App.Name, user.DisplayName(), r.config.App.Name, r.config.App.Name, r.config.App.Name)
+	`, r.config.App.Name, r.config.App.Name, user.DisplayName(), r.config.App.Name, r.config.App.Name, r.config.App.Name)
 }
 // buildEmailVerificationBody builds the email verification body
-func (r *ResendProvider) buildEmailVerificationBody(user *entities.User, magicLink *entities.MagicLink) string {
+func (r *ResendProvider) buildEmailVerificationBody(user *auth.User, magicLink *auth.MagicLink) string {
 	verificationURL := fmt.Sprintf("%s/auth/verify?token=%s", r.config.App.FrontendBaseURL, magicLink.Token)
 	
 	return fmt.Sprintf(`

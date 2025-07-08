@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.SendMagicLinkRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.SendMagicLinkRequest"
                         }
                     }
                 ],
@@ -59,7 +59,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.SendMagicLinkResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.SendMagicLinkResponse"
                                         }
                                     }
                                 }
@@ -107,7 +107,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.VerifyMagicLinkRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.VerifyMagicLinkRequest"
                         }
                     }
                 ],
@@ -123,7 +123,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.VerifyMagicLinkResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.VerifyMagicLinkResponse"
                                         }
                                     }
                                 }
@@ -205,7 +205,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ConversationSummaryResponse"
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_chat.ConversationSummaryResponse"
                                             }
                                         }
                                     }
@@ -251,7 +251,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.CreateConversationRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.CreateConversationRequest"
                         }
                     }
                 ],
@@ -267,7 +267,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.ConversationDetailResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.ConversationDetailResponse"
                                         }
                                     }
                                 }
@@ -334,7 +334,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.ConversationDetailResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.ConversationDetailResponse"
                                         }
                                     }
                                 }
@@ -471,7 +471,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.PostMessageRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.PostMessageRequest"
                         }
                     }
                 ],
@@ -547,7 +547,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UpdateConversationTitleRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.UpdateConversationTitleRequest"
                         }
                     }
                 ],
@@ -664,7 +664,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ProviderResponse"
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_chat.ProviderResponse"
                                             }
                                         }
                                     }
@@ -719,7 +719,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ProviderResponse"
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_chat.ProviderResponse"
                                             }
                                         }
                                     }
@@ -774,7 +774,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserProviderSettingResponse"
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_chat.UserProviderSettingResponse"
                                             }
                                         }
                                     }
@@ -820,7 +820,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UpsertUserProviderSettingRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.UpsertUserProviderSettingRequest"
                         }
                     }
                 ],
@@ -836,7 +836,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserProviderSettingResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_chat.UserProviderSettingResponse"
                                         }
                                     }
                                 }
@@ -910,7 +910,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/trading-alchemist_internal_application_dto.ToolResponse"
+                                                "$ref": "#/definitions/trading-alchemist_internal_application_chat.ToolResponse"
                                             }
                                         }
                                     }
@@ -963,7 +963,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.GetUserResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.GetUserResponse"
                                         }
                                     }
                                 }
@@ -1014,7 +1014,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UpdateUserRequest"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.UpdateUserRequest"
                         }
                     }
                 ],
@@ -1030,7 +1030,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UpdateUserResponse"
+                                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.UpdateUserResponse"
                                         }
                                     }
                                 }
@@ -1087,216 +1087,20 @@ const docTemplate = `{
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.ArtifactResponse": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.ConversationDetailResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "messages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.MessageResponse"
-                    }
-                },
-                "model_id": {
-                    "type": "string"
-                },
-                "system_prompt": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.ConversationSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "last_message_at": {
-                    "type": "string"
-                },
-                "model_id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.CreateArtifactRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "title",
-                "type"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.CreateConversationRequest": {
-            "type": "object",
-            "required": [
-                "title"
-            ],
-            "properties": {
-                "model_name": {
-                    "description": "e.g., \"gpt-4o-mini\". Defaults to a system-wide default if not provided.",
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.GetUserResponse": {
+        "trading-alchemist_internal_application_auth.GetUserResponse": {
             "type": "object",
             "properties": {
                 "user": {
                     "description": "User information",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserResponse"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.UserResponse"
                         }
                     ]
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.JSONB": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "trading-alchemist_internal_application_dto.MessageResponse": {
-            "type": "object",
-            "properties": {
-                "artifacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.ArtifactResponse"
-                    }
-                },
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.ModelResponse": {
-            "type": "object",
-            "properties": {
-                "display_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "tags": {
-                    "description": "Example: [\"LLM\", \"CHAT\", \"200K\"]",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.PostMessageRequest": {
-            "type": "object",
-            "required": [
-                "content"
-            ],
-            "properties": {
-                "artifacts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.CreateArtifactRequest"
-                    }
-                },
-                "content": {
-                    "type": "string"
-                },
-                "model_id": {
-                    "description": "Optional: use specific model for this message",
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.ProviderResponse": {
-            "type": "object",
-            "properties": {
-                "display_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "models": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/trading-alchemist_internal_application_dto.ModelResponse"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.SendMagicLinkRequest": {
+        "trading-alchemist_internal_application_auth.SendMagicLinkRequest": {
             "type": "object",
             "required": [
                 "email"
@@ -1312,7 +1116,7 @@ const docTemplate = `{
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.SendMagicLinkResponse": {
+        "trading-alchemist_internal_application_auth.SendMagicLinkResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -1325,37 +1129,7 @@ const docTemplate = `{
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.ToolResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "schema": {
-                    "$ref": "#/definitions/trading-alchemist_internal_application_dto.JSONB"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.UpdateConversationTitleRequest": {
-            "type": "object",
-            "required": [
-                "title"
-            ],
-            "properties": {
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 1
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.UpdateUserRequest": {
+        "trading-alchemist_internal_application_auth.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -1376,71 +1150,20 @@ const docTemplate = `{
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.UpdateUserResponse": {
+        "trading-alchemist_internal_application_auth.UpdateUserResponse": {
             "type": "object",
             "properties": {
                 "user": {
                     "description": "Updated user information",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserResponse"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.UserResponse"
                         }
                     ]
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.UpsertUserProviderSettingRequest": {
-            "type": "object",
-            "required": [
-                "api_key",
-                "provider_id"
-            ],
-            "properties": {
-                "api_base_override": {
-                    "type": "string"
-                },
-                "api_key": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "provider_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.UserProviderSettingResponse": {
-            "type": "object",
-            "properties": {
-                "api_base_override": {
-                    "type": "string"
-                },
-                "api_key_set": {
-                    "description": "Indicates if the API key is configured, without exposing the key.",
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "provider_display_name": {
-                    "type": "string"
-                },
-                "provider_id": {
-                    "type": "string"
-                },
-                "provider_name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "trading-alchemist_internal_application_dto.UserResponse": {
+        "trading-alchemist_internal_application_auth.UserResponse": {
             "type": "object",
             "properties": {
                 "avatar_url": {
@@ -1489,7 +1212,7 @@ const docTemplate = `{
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.VerifyMagicLinkRequest": {
+        "trading-alchemist_internal_application_auth.VerifyMagicLinkRequest": {
             "type": "object",
             "required": [
                 "token"
@@ -1501,7 +1224,7 @@ const docTemplate = `{
                 }
             }
         },
-        "trading-alchemist_internal_application_dto.VerifyMagicLinkResponse": {
+        "trading-alchemist_internal_application_auth.VerifyMagicLinkResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -1520,9 +1243,286 @@ const docTemplate = `{
                     "description": "User information",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/trading-alchemist_internal_application_dto.UserResponse"
+                            "$ref": "#/definitions/trading-alchemist_internal_application_auth.UserResponse"
                         }
                     ]
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.ArtifactResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.ConversationDetailResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_chat.MessageResponse"
+                    }
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "system_prompt": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.ConversationSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "last_message_at": {
+                    "type": "string"
+                },
+                "model_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.CreateArtifactRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "title",
+                "type"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.CreateConversationRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "model_name": {
+                    "description": "e.g., \"gpt-4o-mini\". Defaults to a system-wide default if not provided.",
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.JSONB": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "trading-alchemist_internal_application_chat.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "artifacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_chat.ArtifactResponse"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.ModelResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "Example: [\"LLM\", \"CHAT\", \"200K\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.PostMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "artifacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_chat.CreateArtifactRequest"
+                    }
+                },
+                "content": {
+                    "type": "string"
+                },
+                "model_id": {
+                    "description": "Optional: use specific model for this message",
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.ProviderResponse": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "models": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/trading-alchemist_internal_application_chat.ModelResponse"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.ToolResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "$ref": "#/definitions/trading-alchemist_internal_application_chat.JSONB"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.UpdateConversationTitleRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 1
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.UpsertUserProviderSettingRequest": {
+            "type": "object",
+            "required": [
+                "api_key",
+                "provider_id"
+            ],
+            "properties": {
+                "api_base_override": {
+                    "type": "string"
+                },
+                "api_key": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "provider_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "trading-alchemist_internal_application_chat.UserProviderSettingResponse": {
+            "type": "object",
+            "properties": {
+                "api_base_override": {
+                    "type": "string"
+                },
+                "api_key_set": {
+                    "description": "Indicates if the API key is configured, without exposing the key.",
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "provider_display_name": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "string"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

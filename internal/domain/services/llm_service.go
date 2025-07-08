@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/chat"
 )
 
 // ChatStreamEvent represents a single event in a chat completion stream.
@@ -18,9 +18,9 @@ type LLMService interface {
 	// StreamChatCompletion sends a chat request and streams the response.
 	StreamChatCompletion(
 		ctx context.Context,
-		provider *entities.Provider,
-		model *entities.Model,
-		messages []*entities.Message,
+		provider *chat.Provider,
+		model *chat.Model,
+		messages []*chat.Message,
 		apiKey string,
 		apiBaseOverride string,
 	) (<-chan ChatStreamEvent, error)

@@ -32,7 +32,7 @@ type HealthResponse struct {
 // @Tags Health
 // @Accept json
 // @Produce json
-// @Success 200 {object} responses.SuccessResponse{data=HealthResponse} "Service is healthy"
+// @Success 200 {object} responses.SuccessResponse{data=handlers.HealthResponse} "Service is healthy"
 // @Failure 503 {object} responses.ErrorResponse "Service is unhealthy"
 // @Router /health [get]
 func CheckHealth(c *fiber.Ctx) error {

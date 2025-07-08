@@ -2,7 +2,7 @@ package provider
 
 import (
 	"context"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/chat"
 	"trading-alchemist/internal/domain/services"
 )
 
@@ -10,8 +10,8 @@ import (
 type ProviderClient interface {
 	StreamChatCompletion(
 		ctx context.Context,
-		model *entities.Model,
-		messages []*entities.Message,
+		model *chat.Model,
+		messages []*chat.Message,
 	) (<-chan services.ChatStreamEvent, error)
 	// In the future, we could add other methods like:
 	// GetToolDefinitions() []ToolDefinition

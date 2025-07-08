@@ -3,8 +3,7 @@ package utils
 import (
 	"fmt"
 	"time"
-
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/auth"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -15,7 +14,7 @@ type Claims struct {
 }
 
 // GenerateJWT creates a new JWT token
-func GenerateJWT(user *entities.User, secret string, ttl time.Duration, issuer string) (string, error) {
+func GenerateJWT(user *auth.User, secret string, ttl time.Duration, issuer string) (string, error) {
 	if user == nil {
 		return "", fmt.Errorf("user cannot be nil")
 	}

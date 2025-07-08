@@ -3,14 +3,15 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/auth"
+	"trading-alchemist/internal/application/chat"
 	"trading-alchemist/internal/config"
 	"trading-alchemist/internal/presentation/http/handlers"
 	"trading-alchemist/internal/presentation/http/middleware"
 )
 
 // SetupRoutes configures all application routes
-func SetupRoutes(app *fiber.App, cfg *config.Config, authUseCase *usecases.AuthUseCase, userUseCase *usecases.UserUseCase, chatUseCase *usecases.ChatUseCase, conversationUseCase *usecases.ConversationUseCase, providerUseCase *usecases.UserProviderSettingUseCase, modelAvailabilityUseCase *usecases.ModelAvailabilityUseCase) {
+func SetupRoutes(app *fiber.App, cfg *config.Config, authUseCase *auth.AuthUseCase, userUseCase *auth.UserUseCase, chatUseCase *chat.ChatUseCase, conversationUseCase *chat.ConversationUseCase, providerUseCase *chat.UserProviderSettingUseCase, modelAvailabilityUseCase *chat.ModelAvailabilityUseCase) {
 	// Create handlers
 	authHandler := handlers.NewAuthHandler(authUseCase)
 	userHandler := handlers.NewUserHandler(userUseCase, authUseCase)

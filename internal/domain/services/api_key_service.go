@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/chat"
 
 	"github.com/google/uuid"
 )
@@ -13,7 +13,7 @@ type APIKeyService interface {
 	IsProviderConfigured(ctx context.Context, userID, providerID uuid.UUID) (bool, error)
 	
 	// GetUserProviderConfig returns the configuration for a user-provider combination
-	GetUserProviderConfig(ctx context.Context, userID, providerID uuid.UUID) (*entities.UserProviderSetting, error)
+	GetUserProviderConfig(ctx context.Context, userID, providerID uuid.UUID) (*chat.UserProviderSetting, error)
 	
 	// ValidateProviderAccess checks if user can access a specific provider
 	ValidateProviderAccess(ctx context.Context, userID, providerID uuid.UUID) error

@@ -1,8 +1,7 @@
 package handlers
 
 import (
-	"trading-alchemist/internal/application/dto"
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/chat"
 	"trading-alchemist/internal/presentation/responses"
 	"trading-alchemist/pkg/utils"
 
@@ -17,12 +16,12 @@ import (
 
 // ChatHandler handles chat-related requests.
 type ChatHandler struct {
-	chatUseCase         *usecases.ChatUseCase
-	conversationUseCase *usecases.ConversationUseCase
+	chatUseCase         *chat.ChatUseCase
+	conversationUseCase *chat.ConversationUseCase
 }
 
 // NewChatHandler creates a new ChatHandler.
-func NewChatHandler(chatUseCase *usecases.ChatUseCase, conversationUseCase *usecases.ConversationUseCase) *ChatHandler {
+func NewChatHandler(chatUseCase *chat.ChatUseCase, conversationUseCase *chat.ConversationUseCase) *ChatHandler {
 	return &ChatHandler{
 		chatUseCase:         chatUseCase,
 		conversationUseCase: conversationUseCase,
@@ -36,14 +35,14 @@ func NewChatHandler(chatUseCase *usecases.ChatUseCase, conversationUseCase *usec
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param request body dto.CreateConversationRequest true "Conversation creation request"
-// @Success 201 {object} responses.SuccessResponse{data=dto.ConversationDetailResponse} "Conversation created successfully"
+// @Param request body chat.CreateConversationRequest true "Conversation creation request"
+// @Success 201 {object} responses.SuccessResponse{data=chat.ConversationDetailResponse} "Conversation created successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid request body or validation error"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /conversations [post]
 func (h *ChatHandler) CreateConversation(c *fiber.Ctx) error {
-	var req dto.CreateConversationRequest
+	var req chat.CreateConversationRequest
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
@@ -78,7 +77,7 @@ func (h *ChatHandler) CreateConversation(c *fiber.Ctx) error {
 // @Security Bearer
 // @Param limit query int false "Number of conversations to return" default(20)
 // @Param offset query int false "Offset for pagination" default(0)
-// @Success 200 {object} responses.SuccessResponse{data=[]dto.ConversationSummaryResponse} "Conversations retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=[]chat.ConversationSummaryResponse} "Conversations retrieved successfully"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /conversations [get]
@@ -115,7 +114,7 @@ func (h *ChatHandler) GetConversations(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path string true "Conversation ID"
-// @Success 200 {object} responses.SuccessResponse{data=dto.ConversationDetailResponse} "Conversation details retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=chat.ConversationDetailResponse} "Conversation details retrieved successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid conversation ID format"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 403 {object} responses.ErrorResponse "Forbidden - User does not own this conversation"
@@ -157,7 +156,7 @@ func (h *ChatHandler) GetConversation(c *fiber.Ctx) error {
 // @Produce plain
 // @Security Bearer
 // @Param id path string true "Conversation ID"
-// @Param request body dto.PostMessageRequest true "Message content"
+// @Param request body chat.PostMessageRequest true "Message content"
 // @Success 200 {string} string "text/event-stream response"
 // @Failure 400 {object} responses.ErrorResponse "Invalid request body or ID format"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
@@ -166,7 +165,7 @@ func (h *ChatHandler) GetConversation(c *fiber.Ctx) error {
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /conversations/{id}/messages [post]
 func (h *ChatHandler) PostMessage(c *fiber.Ctx) error {
-	var req dto.PostMessageRequest
+	var req chat.PostMessageRequest
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
@@ -238,7 +237,7 @@ func (h *ChatHandler) PostMessage(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param provider_id query string false "Filter tools by a specific provider ID"
-// @Success 200 {object} responses.SuccessResponse{data=[]dto.ToolResponse} "Tools retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=[]chat.ToolResponse} "Tools retrieved successfully"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /tools [get]
@@ -267,7 +266,7 @@ func (h *ChatHandler) GetAvailableTools(c *fiber.Ctx) error {
 // @Produce json
 // @Security Bearer
 // @Param id path string true "Conversation ID"
-// @Param request body dto.UpdateConversationTitleRequest true "Title update request"
+// @Param request body chat.UpdateConversationTitleRequest true "Title update request"
 // @Success 200 {object} responses.SuccessResponse "Conversation title updated successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid request body or ID format"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized"
@@ -276,7 +275,7 @@ func (h *ChatHandler) GetAvailableTools(c *fiber.Ctx) error {
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /conversations/{id}/title [put]
 func (h *ChatHandler) UpdateConversationTitle(c *fiber.Ctx) error {
-	var req dto.UpdateConversationTitleRequest
+	var req chat.UpdateConversationTitleRequest
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}

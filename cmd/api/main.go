@@ -9,12 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/auth"
 	"trading-alchemist/internal/config"
 	"trading-alchemist/internal/infrastructure/database"
 	"trading-alchemist/internal/infrastructure/email"
 	"trading-alchemist/internal/infrastructure/llm/agent"
-	"trading-alchemist/internal/infrastructure/repositories/postgres"
 	server "trading-alchemist/internal/presentation/http"
 )
 
@@ -51,15 +50,11 @@ func main() {
 		log.Fatalf("Failed to create LLM service: %v", err)
 	}
 
-	// Initialize repositories
-	userRepo := postgres.NewUserRepository(dbPool)
-	magicLinkRepo := postgres.NewMagicLinkRepository(dbPool)
-
-	// Initialize use cases
-	authUseCase := usecases.NewAuthUseCase(userRepo, magicLinkRepo, emailService, cfg, dbService)
+	// Initialize use cases - repositories are now managed through dbService
+	authUseCase := auth.NewAuthUseCase(emailService, cfg, dbService)
 
 	// Initialize HTTP server
-	httpServer := server.NewServer(cfg, authUseCase, userRepo, dbService, llmService)
+	httpServer := server.NewServer(cfg, authUseCase, dbService, llmService)
 
 	// Start server in a goroutine
 	go func() {

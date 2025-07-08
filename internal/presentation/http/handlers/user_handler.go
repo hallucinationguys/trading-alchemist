@@ -4,20 +4,19 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	"trading-alchemist/internal/application/dto"
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/auth"
 	"trading-alchemist/internal/presentation/responses"
 	"trading-alchemist/pkg/utils"
 )
 
 // UserHandler handles user-related requests
 type UserHandler struct {
-	userUseCase *usecases.UserUseCase
-	authUseCase *usecases.AuthUseCase
+	userUseCase *auth.UserUseCase
+	authUseCase *auth.AuthUseCase
 }
 
 // NewUserHandler creates a new user handler
-func NewUserHandler(userUseCase *usecases.UserUseCase, authUseCase *usecases.AuthUseCase) *UserHandler {
+func NewUserHandler(userUseCase *auth.UserUseCase, authUseCase *auth.AuthUseCase) *UserHandler {
 	return &UserHandler{
 		userUseCase: userUseCase,
 		authUseCase: authUseCase,
@@ -31,7 +30,7 @@ func NewUserHandler(userUseCase *usecases.UserUseCase, authUseCase *usecases.Aut
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Success 200 {object} responses.SuccessResponse{data=dto.GetUserResponse} "User profile retrieved successfully"
+// @Success 200 {object} responses.SuccessResponse{data=auth.GetUserResponse} "User profile retrieved successfully"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized - invalid or missing token"
 // @Failure 404 {object} responses.ErrorResponse "User not found"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
@@ -54,7 +53,7 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 		return responses.HandleError(c, err)
 	}
 
-	response := dto.GetUserResponse{
+	response := auth.GetUserResponse{
 		User: *userProfile,
 	}
 
@@ -68,15 +67,15 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security Bearer
-// @Param request body dto.UpdateUserRequest true "User profile information to update"
-// @Success 200 {object} responses.SuccessResponse{data=dto.UpdateUserResponse} "User profile updated successfully"
+// @Param request body auth.UpdateUserRequest true "User profile information to update"
+// @Success 200 {object} responses.SuccessResponse{data=auth.UpdateUserResponse} "User profile updated successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid request data or validation error"
 // @Failure 401 {object} responses.ErrorResponse "Unauthorized - invalid or missing token"
 // @Failure 404 {object} responses.ErrorResponse "User not found"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /users/profile [put]
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
-	var req dto.UpdateUserRequest
+	var req auth.UpdateUserRequest
 
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
@@ -107,7 +106,7 @@ func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
 		return responses.HandleError(c, err)
 	}
 
-	response := dto.UpdateUserResponse{
+	response := auth.UpdateUserResponse{
 		User: *updatedUser,
 	}
 

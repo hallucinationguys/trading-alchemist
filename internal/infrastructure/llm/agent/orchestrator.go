@@ -3,7 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/chat"
 	"trading-alchemist/internal/domain/services"
 	"trading-alchemist/internal/infrastructure/llm/provider"
 )
@@ -21,9 +21,9 @@ func NewOrchestratorService() *OrchestratorService {
 // StreamChatCompletion finds the correct provider client and delegates the call.
 func (s *OrchestratorService) StreamChatCompletion(
 	ctx context.Context,
-	providerE *entities.Provider,
-	model *entities.Model,
-	messages []*entities.Message,
+	providerE *chat.Provider,
+	model *chat.Model,
+	messages []*chat.Message,
 	apiKey string,
 	apiBaseOverride string,
 ) (<-chan services.ChatStreamEvent, error) {

@@ -8,9 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/auth"
+	"trading-alchemist/internal/application/chat"
 	"trading-alchemist/internal/config"
-	"trading-alchemist/internal/domain/repositories"
 	"trading-alchemist/internal/domain/services"
 	"trading-alchemist/internal/infrastructure/database"
 	infraServices "trading-alchemist/internal/infrastructure/services"
@@ -25,7 +25,7 @@ type Server struct {
 }
 
 // NewServer creates a new HTTP server with all dependencies
-func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo repositories.UserRepository, dbService *database.Service, llmService services.LLMService) *Server {
+func NewServer(cfg *config.Config, authUseCase *auth.AuthUseCase, dbService *database.Service, llmService services.LLMService) *Server {
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		ReadTimeout:    cfg.Server.ReadTimeout,
@@ -49,17 +49,17 @@ func NewServer(cfg *config.Config, authUseCase *usecases.AuthUseCase, userRepo r
 	}))
 
 	// Create use cases
-	userUseCase := usecases.NewUserUseCase(userRepo)
-	conversationUseCase := usecases.NewConversationUseCase(dbService, cfg, llmService)
-	chatUseCase := usecases.NewChatUseCase(dbService, cfg, llmService, conversationUseCase)
-	providerUseCase := usecases.NewUserProviderSettingUseCase(dbService, cfg)
+	userUseCase := auth.NewUserUseCase(dbService)
+	conversationUseCase := chat.NewConversationUseCase(dbService, cfg, llmService)
+	chatUseCase := chat.NewChatUseCase(dbService, cfg, llmService, conversationUseCase)
+	providerUseCase := chat.NewUserProviderSettingUseCase(dbService, cfg)
 	
 	// Create API key service and model availability use case
 	// We create a temporary repository provider to access the user provider setting repository
-	var modelAvailabilityUseCase *usecases.ModelAvailabilityUseCase
+	var modelAvailabilityUseCase *chat.ModelAvailabilityUseCase
 	err := dbService.ExecuteInTx(context.Background(), func(provider database.RepositoryProvider) error {
 		apiKeyService := infraServices.NewAPIKeyService(provider.UserProviderSetting())
-		modelAvailabilityUseCase = usecases.NewModelAvailabilityUseCase(dbService, apiKeyService)
+		modelAvailabilityUseCase = chat.NewModelAvailabilityUseCase(dbService, apiKeyService)
 		return nil
 	})
 	if err != nil {

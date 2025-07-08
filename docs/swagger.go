@@ -18,7 +18,8 @@
 package docs
 
 import (
-	_ "trading-alchemist/internal/application/dto"
+	_ "trading-alchemist/internal/application/auth"
+	_ "trading-alchemist/internal/application/chat"
 	_ "trading-alchemist/internal/presentation/http/handlers"
 	_ "trading-alchemist/internal/presentation/responses"
 ) 

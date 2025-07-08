@@ -3,8 +3,9 @@ package provider
 import (
 	"context"
 	"errors"
-	"trading-alchemist/internal/domain/entities"
+	"trading-alchemist/internal/domain/chat"
 	"trading-alchemist/internal/domain/services"
+	"trading-alchemist/internal/domain/shared"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -33,8 +34,8 @@ func NewOpenAIClient(apiKey, apiBaseOverride string) (ProviderClient, error) {
 // StreamChatCompletion sends a chat request and streams the response.
 func (c *OpenAIClient) StreamChatCompletion(
 	ctx context.Context,
-	model *entities.Model,
-	messages []*entities.Message,
+	model *chat.Model,
+	messages []*chat.Message,
 ) (<-chan services.ChatStreamEvent, error) {
 	// 1. Convert domain messages to OpenAI messages
 	openAIMessages, err := c.toOpenAIMessages(messages)
@@ -79,12 +80,12 @@ func (c *OpenAIClient) StreamChatCompletion(
 	return events, nil
 }
 
-func (c *OpenAIClient) toOpenAIMessages(messages []*entities.Message) ([]openai.ChatCompletionMessageParamUnion, error) {
+func (c *OpenAIClient) toOpenAIMessages(messages []*chat.Message) ([]openai.ChatCompletionMessageParamUnion, error) {
 	openAIMessages := make([]openai.ChatCompletionMessageParamUnion, len(messages))
 	for i, msg := range messages {
 		var param openai.ChatCompletionMessageParamUnion
 		switch msg.Role {
-		case entities.MessageRoleUser:
+		case shared.MessageRoleUser:
 			param = openai.ChatCompletionMessageParamUnion{
 				OfUser: &openai.ChatCompletionUserMessageParam{
 					Content: openai.ChatCompletionUserMessageParamContentUnion{
@@ -92,7 +93,7 @@ func (c *OpenAIClient) toOpenAIMessages(messages []*entities.Message) ([]openai.
 					},
 				},
 			}
-		case entities.MessageRoleAssistant:
+		case shared.MessageRoleAssistant:
 			param = openai.ChatCompletionMessageParamUnion{
 				OfAssistant: &openai.ChatCompletionAssistantMessageParam{
 					Content: openai.ChatCompletionAssistantMessageParamContentUnion{
@@ -100,7 +101,7 @@ func (c *OpenAIClient) toOpenAIMessages(messages []*entities.Message) ([]openai.
 					},
 				},
 			}
-		case entities.MessageRoleSystem:
+		case shared.MessageRoleSystem:
 			param = openai.ChatCompletionMessageParamUnion{
 				OfSystem: &openai.ChatCompletionSystemMessageParam{
 					Content: openai.ChatCompletionSystemMessageParamContentUnion{

@@ -3,19 +3,18 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"trading-alchemist/internal/application/dto"
-	"trading-alchemist/internal/application/usecases"
+	"trading-alchemist/internal/application/auth"
 	"trading-alchemist/internal/presentation/responses"
 	"trading-alchemist/pkg/errors"
 )
 
 // AuthHandler handles authentication-related requests
 type AuthHandler struct {
-	authUseCase *usecases.AuthUseCase
+	authUseCase *auth.AuthUseCase
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler(authUseCase *usecases.AuthUseCase) *AuthHandler {
+func NewAuthHandler(authUseCase *auth.AuthUseCase) *AuthHandler {
 	return &AuthHandler{
 		authUseCase: authUseCase,
 	}
@@ -27,14 +26,14 @@ func NewAuthHandler(authUseCase *usecases.AuthUseCase) *AuthHandler {
 // @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param request body dto.SendMagicLinkRequest true "Email address to send magic link to"
-// @Success 200 {object} responses.SuccessResponse{data=dto.SendMagicLinkResponse} "Magic link sent successfully"
+// @Param request body auth.SendMagicLinkRequest true "Email address to send magic link to"
+// @Success 200 {object} responses.SuccessResponse{data=auth.SendMagicLinkResponse} "Magic link sent successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid email address or validation error"
 // @Failure 429 {object} responses.ErrorResponse "Too many requests - rate limit exceeded"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /auth/magic-link [post]
 func (h *AuthHandler) SendMagicLink(c *fiber.Ctx) error {
-	var req dto.SendMagicLinkRequest
+	var req auth.SendMagicLinkRequest
 	
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
@@ -70,15 +69,15 @@ func (h *AuthHandler) SendMagicLink(c *fiber.Ctx) error {
 // @Tags Authentication
 // @Accept json
 // @Produce json
-// @Param request body dto.VerifyMagicLinkRequest true "Magic link token to verify"
-// @Success 200 {object} responses.SuccessResponse{data=dto.VerifyMagicLinkResponse} "Magic link verified successfully"
+// @Param request body auth.VerifyMagicLinkRequest true "Magic link token to verify"
+// @Success 200 {object} responses.SuccessResponse{data=auth.VerifyMagicLinkResponse} "Magic link verified successfully"
 // @Failure 400 {object} responses.ErrorResponse "Invalid token format or token missing"
 // @Failure 401 {object} responses.ErrorResponse "Invalid, expired, or already used token"
 // @Failure 404 {object} responses.ErrorResponse "Token not found"
 // @Failure 500 {object} responses.ErrorResponse "Internal server error"
 // @Router /auth/verify [post]
 func (h *AuthHandler) VerifyMagicLink(c *fiber.Ctx) error {
-	var req dto.VerifyMagicLinkRequest
+	var req auth.VerifyMagicLinkRequest
 	if err := c.BodyParser(&req); err != nil {
 		return responses.SendError(c, fiber.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
 	}
