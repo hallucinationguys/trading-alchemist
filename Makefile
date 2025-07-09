@@ -4,38 +4,51 @@
 BINARY_NAME=trading-alchemist
 DOCKER_COMPOSE_FILE=docker/compose/docker-compose.yml
 DOCKER_COMPOSE_DEV_FILE=docker/compose/docker-compose.override.yml
-DOCKER_COMPOSE_PROD_FILE=docker/compose/docker-compose.prod.yml
 DOCKERFILE=docker/app/Dockerfile
-DOCKERFILE_DEV=docker/app/Dockerfile.dev
 MIGRATION_PATH=internal/infrastructure/database/migrations
 DATABASE_URL=postgres://postgres:postgres@localhost:5433/trading_alchemist_db?sslmode=disable
-IMAGE_NAME=trading-alchemist
-IMAGE_TAG=latest
+
+# === SIMPLIFIED DEVELOPMENT WORKFLOW ===
+setup: config-copy-dev docker-up migrate-up sqlc-generate swagger-generate ## Complete development environment setup (run once)
+	@echo ""
+	@echo "🎉 Development environment setup complete!"
+	@echo ""
+	@echo "To start developing:"
+	@echo "  make dev    # Start backend application via Docker"
+	@echo ""
+
+dev: ## Start backend application via Docker (daily development)
+	@echo "🚀 Starting backend application via Docker..."
+	docker-compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_DEV_FILE) up
+
+stop: ## Stop development environment
+	@echo "🛑 Stopping development environment..."
+	@docker-compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_DEV_FILE) down
+
+restart: stop dev ## Restart development environment
+
+# === END SIMPLIFIED WORKFLOW ===
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
 	@echo ''
-	@echo 'Targets:'
+	@echo 'Quick Start (for new developers):'
+	@echo '  devbox shell  # Enter development environment (tools pre-installed)'
+	@echo '  make setup    # One-time setup (configs, docker, migrations)'
+	@echo '  make dev      # Start backend application via Docker'
+	@echo ''
+	@echo 'Daily Development:'
+	@echo '  make dev      # Start backend + database via Docker'
+	@echo '  make stop     # Stop all Docker services'
+	@echo ''
+	@echo 'All Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # Local development commands
 build: ## Build the application
 	GOFLAGS='-mod=mod' go build -o bin/$(BINARY_NAME) cmd/api/main.go
 
-run: ## Run the application (development environment)
-	GOFLAGS='-mod=mod' APP_ENV=development go run cmd/api/main.go
 
-run-dev: config-copy-dev ## Run with development configuration
-	GOFLAGS='-mod=mod' APP_ENV=development go run cmd/api/main.go
-
-run-prod: config-copy-prod ## Run with production configuration
-	GOFLAGS='-mod=mod' APP_ENV=production go run cmd/api/main.go
-
-run-test: config-copy-test ## Run with test configuration
-	GOFLAGS='-mod=mod' APP_ENV=test go run cmd/api/main.go
-
-run-staging: config-copy-staging ## Run with staging configuration
-	GOFLAGS='-mod=mod' APP_ENV=staging go run cmd/api/main.go
 
 test: ## Run tests
 	GOFLAGS='-mod=mod' APP_ENV=test go test -v ./...
@@ -47,16 +60,8 @@ clean-air: ## Clean Air temporary files
 	rm -rf tmp/ build-errors.log
 
 # Docker commands
-docker-build: ## Build Docker image for production
-	docker build -f $(DOCKERFILE) -t $(IMAGE_NAME):$(IMAGE_TAG) .
-
-docker-build-dev: ## Build Docker image for development
-	docker build -f $(DOCKERFILE_DEV) -t $(IMAGE_NAME):dev .
-
-docker-run: ## Run application in Docker container
-	docker run --rm -p 8080:8080 \
-		-e DB_HOST=host.docker.internal \
-		$(IMAGE_NAME):$(IMAGE_TAG)
+docker-build: ## Build Docker image
+	docker build -f $(DOCKERFILE) -t $(BINARY_NAME):latest .
 
 # Docker Compose commands
 docker-up: ## Start all services with Docker Compose
@@ -83,11 +88,7 @@ docker-dev-shell: ## Shell into development container
 docker-dev-stop: ## Stop development environment
 	docker-compose -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_DEV_FILE) down
 
-docker-prod: ## Start production environment
-	docker-compose -f $(DOCKER_COMPOSE_PROD_FILE) up -d
 
-docker-prod-build: ## Build and start production environment
-	docker-compose -f $(DOCKER_COMPOSE_PROD_FILE) up --build -d
 
 docker-restart: ## Restart all services
 	docker-compose -f $(DOCKER_COMPOSE_FILE) restart
@@ -133,14 +134,6 @@ config-copy-dev: ## Copy development config from example
 		echo "configs/env.dev already exists"; \
 	fi
 
-config-copy-prod: ## Copy production config from example
-	@if [ ! -f configs/env.prod ]; then \
-		cp configs/env.prod.example configs/env.prod; \
-		echo "Created configs/env.prod from example"; \
-	else \
-		echo "configs/env.prod already exists"; \
-	fi
-
 config-copy-test: ## Copy test config from example
 	@if [ ! -f configs/env.test ]; then \
 		cp configs/env.test.example configs/env.test; \
@@ -149,24 +142,12 @@ config-copy-test: ## Copy test config from example
 		echo "configs/env.test already exists"; \
 	fi
 
-config-copy-staging: ## Copy staging config from example
-	@if [ ! -f configs/env.staging ]; then \
-		cp configs/env.staging.example configs/env.staging; \
-		echo "Created configs/env.staging from example"; \
-	else \
-		echo "configs/env.staging already exists"; \
-	fi
+config-copy-all: config-copy-dev config-copy-test ## Copy all config files from examples
 
 # Development utilities
 deps: ## Install dependencies
 	go mod tidy
 	go mod download
-
-dev-setup: docker-up migrate-up sqlc-generate swagger-generate ## Setup development environment
-	@echo "Development environment ready!"
-
-docker-dev-setup: docker-dev-build docker-migrate-up swagger-generate ## Setup Docker development environment
-	@echo "Docker development environment ready!"
 
 docker-dev-test: ## Test Docker development environment
 	@echo "Testing Docker development environment..."
@@ -188,10 +169,6 @@ docker-test: ## Run tests in Docker container
 		-w /app \
 		golang:1.24.3-alpine \
 		go test -v ./...
-
-# Production deployment helpers
-deploy-prod: docker-prod-build ## Deploy to production
-	@echo "Production deployment completed!"
 
 # Monitoring
 docker-stats: ## Show Docker container stats
